@@ -32,9 +32,45 @@ function Vaalikone(questions, answers) {
     );
     this.answerOptions.sort();
 
+    this.defineColors();
+
     //console.log(this.answerOptions);
     //console.log(this.partyAnswerMatrix);
 }
+
+Vaalikone.prototype.defineColors = function() {
+
+    const minX = d3.min(this.answerOptions);
+    const colorScale = d3.scaleLinear()
+        .domain([minX, d3.max(this.answerOptions)])
+        .range([0, 1]);
+
+    const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
+
+    const colorMaps = brightness => {
+        return x => {
+            let c = colorScale(x);
+
+            let sat = Math.sqrt(Math.abs(c - 0.5)*2.0);
+            const bright = brightness || sat*0.3 + 0.7;
+
+            return rgb([
+                    1.0 - (c-2/3)*3,
+                    c*2,
+                    0.0
+                ]
+                .map(v => Math.min(Math.max(v, 0), 1))
+                .map(v => (v*sat + 1.0 - sat)*bright));
+        };
+    };
+
+    this.histogramColormap = colorMaps();
+    this.textColormap = colorMaps(0.7);
+};
+
+Vaalikone.prototype.computeMean = function(histogram) {
+    return _.sum(_.map(histogram, (k, v) => k*v)) / _.sum(_.values(histogram));
+};
 
 Vaalikone.prototype.renderHistogram = function(d3root, data) {
 
@@ -46,29 +82,6 @@ Vaalikone.prototype.renderHistogram = function(d3root, data) {
     const maxHeight = this.subplotSize.h;
     const xStart = 0.5 / Math.sqrt(2) * barWidth;
 
-    const colorScale = d3.scaleLinear()
-        .domain([minX, d3.max(this.answerOptions)])
-        .range([0, 1]);
-
-    const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
-
-
-    const color = x => {
-        let c = colorScale(x);
-
-        let sat = Math.sqrt(Math.abs(Math.pow(c, 1.5) - 0.5)*2.0);
-        const bright = sat*0.3 + 0.7;
-
-        return rgb([
-                1.0 - (c-0.5)*2,
-                c*2,
-                0.0
-            ]
-            .map(v => Math.min(Math.max(v, 0), 1))
-            .map(v => (v*sat + 1.0 - sat)*bright));
-    };
-
-    //const height = x => (data[x] || 0) / total * maxHeight;
     const radius = x => Math.sqrt((data[x] || 0) / total) * maxR;
 
     const bars = d3root
@@ -81,15 +94,58 @@ Vaalikone.prototype.renderHistogram = function(d3root, data) {
         .enter()
             .append('circle')
             .attr('cx', x => (x-minX + 0.5) * barWidth + xStart)
-            //.attr('width', barWidth)
-            .attr('fill', color)
-        .merge(bars)
             .attr('cy', maxHeight*0.5)
+            .attr('fill', this.histogramColormap)
+        .merge(bars)
+            .transition()
             .attr('r', radius);
-            //.attr('height', height);
+
+    return this.textColormap(this.computeMean(data));
 };
 
-Vaalikone.prototype.renderQuestion = function(d3root, questionId) {
+Vaalikone.prototype.renderPartyRow = function(d3root, party, data, questionId, selectedParty) {
+
+    const title = d3root
+        .selectAll('div.title')
+        .data([party]);
+
+    const that = this;
+    const titleText = title
+        .enter()
+            .append('div')
+            .classed('title', true)
+            .classed('col-4', true)
+        .merge(title)
+            .text(d => d)
+            .on('click', d => {
+                that.renderQuestion(questionId, party);
+                that.renderQuestionList(party);
+            });
+
+    const histogram = d3root
+        .selectAll('div.histogram')
+        .data([party]);
+
+    let color =
+        this.renderHistogram(histogram
+            .enter()
+                .append('div')
+                .classed('histogram', true)
+                .classed('col', true)
+                    .append('svg')
+                        .attr('width', this.subplotSize.w)
+                        .attr('height', this.subplotSize.h)
+                    .merge(histogram), data);
+
+    if (selectedParty) {
+        titleText.style('font-weight', selectedParty === party ? 'bold' : 'normal');
+        titleText.style('color', selectedParty === party ? 'black' : 'gray');
+    } else {
+        titleText.style('color', color);
+    }
+};
+
+Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
 
     const options = this.answerOptions;
     const byParty = _.mapValues(this.partyAnswerMatrix,
@@ -99,68 +155,100 @@ Vaalikone.prototype.renderQuestion = function(d3root, questionId) {
             .entries(answers[questionId])
             .map(obj => [obj.key, obj.value])));
 
-    console.log(byParty);
+    //console.log(byParty);
 
     const that = this;
+    const parties = _.keys(byParty);
+    const means = _.fromPairs(
+        parties.map(p => [p, -that.computeMean(byParty[p])]));
 
-    const subplots = d3root
+    const subplots = this.graphColumn
         .selectAll('div.row')
-        .data(_.keys(byParty));
+        .data(_.sortBy(parties, p => means[p]));
 
     subplots.exit().remove();
 
-    const figures = subplots.enter()
-        .append('div')
-        .classed('row', true);
+    subplots.enter()
+            .append('div')
+            .classed('row', true)
+        .merge(subplots)
+            .transition()
+            .each(function(d) {
+                that.renderPartyRow(d3.select(this), d, byParty[d], questionId, selectedParty);
+            });
+};
 
-    figures
-        .append('div')
-        .classed('col-4', true)
-        .classed('title', true);
+Vaalikone.prototype.renderQuestionList = function(party) {
 
-    figures.select('div.title').text(d => d);
+    let data = _.toPairs(this.questions)
+        .map(d => { return { id: d[0], text: d[1] }; });
 
-    figures
-        .append('div')
-        .classed('col', true)
-            .append('svg')
-                .attr('width', this.subplotSize.w)
-                .attr('height', this.subplotSize.h)
-            .merge(subplots)
-                .each(function(d) {
-                    that.renderHistogram(d3.select(this), byParty[d]);
-                });
+    if (party) {
+
+        const byQuestion = _.fromPairs(_.keys(this.questions)
+            .map(questionId => {
+                const means =_.mapValues(this.partyAnswerMatrix,
+                    answers => _.mean(answers[questionId]));
+
+                return [
+                    questionId,
+                    {
+                        partyMean: means[party],
+                        meanOfMeans: _.mean(_.values(means))
+                    }
+                ];
+            })
+        );
+
+        //console.log(byQuestion);
+
+        data.forEach(d => {
+            d.partyValue = byQuestion[d.id].partyMean;
+        });
+
+        data = _.sortBy(data, d => -(d.partyValue - byQuestion[d.id].meanOfMeans));
+    }
+
+    const questions = this.questionList
+        .selectAll('li a')
+        .data(data);
+
+    const that = this;
+
+    const NO_ACTION = 'javascript:void(0)';
+
+    const questionTexts = questions.enter()
+            .append('li')
+            .append('a')
+                .attr('href', NO_ACTION)
+        .merge(questions)
+            .on('mousedown', d => that.renderQuestion(d.id, party))
+            .text(d => d.text)
+            .attr('style', d => {
+                if (party) {
+                    return 'color: ' + that.textColormap(d.partyValue);
+                }
+                return '';
+            });
 
 };
 
 Vaalikone.prototype.start = function(d3root) {
 
-    const that = this;
-
     const container = d3root
         .append('div')
         .classed('row', true);
 
-    const NO_ACTION = 'javascript:void(0)';
-
-    const questionList =
+    this.questionList =
         container
             .append('div')
             .classed('question-column', true)
                 .append('ul');
 
-    const graphs =
+    this.graphColumn =
         container
             .append('div')
             .classed('graph-column', true);
 
-    questionList
-        .selectAll('li')
-        .data(_.toPairs(this.questions))
-        .enter()
-        .append('li')
-            .append('a')
-            .attr('href', NO_ACTION)
-            .text(d => d[1])
-            .on('click', d => that.renderQuestion(graphs, d[0]));
+    this.renderQuestionList();
 };

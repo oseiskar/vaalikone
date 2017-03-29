@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>Alt-vaalikone</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.2/lodash.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
     <style>
@@ -12,8 +12,9 @@
     }
 
     .title {
-      margin-top: 17px;
+      margin-top: 15px;
       text-align: right;
+      font-weight: bold;
     }
 
     .graph-column {
@@ -27,6 +28,28 @@
         margin: 3%;
         width: 50%;
     }
+
+    a {
+        color: #505050;
+    }
+
+    a:focus {
+        color: black !important;
+        font-size: 14pt;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    a:hover {
+        color: black;
+        text-decoration: none;
+    }
+
+    li {
+        margin-top: 8px;
+        margin-bottom: 8px;
+    }
+
     </style>
 </head>
 <body>
