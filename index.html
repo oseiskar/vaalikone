@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+<head>
+    <title>Alt-vaalikone</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.3.0/d3.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.2/lodash.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"/>
+    <style>
+    body {
+        margin: 2%;
+    }
+
+    .title {
+      margin-top: 17px;
+      text-align: right;
+    }
+
+    .graph-column {
+        position: fixed;
+        top: 10;
+        left: 55%;
+        width: 50%;
+    }
+
+    .question-column {
+        margin: 3%;
+        width: 50%;
+    }
+    </style>
+</head>
+<body>
+    <div id="vaalikone">
+    </div>
+</body>
+<script src="vaalikone.js"></script>
+<script type="text/javascript">
+    "use strict";
+
+    d3.queue()
+        .defer(d3.json, "data/questions.json")
+        .defer(d3.json, "data/answers.json")
+        .await(function(err, questions, answers) {
+            var vaalikone = new Vaalikone(questions, answers);
+            vaalikone.start(d3.select("#vaalikone"));
+        });
+</script>
+</html>
