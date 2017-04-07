@@ -1,0 +1,3 @@
+[submodule "avoindata"]
+	path = avoindata
+	url = https://github.com/HS-Datadesk/avoindata.git
