@@ -3,14 +3,14 @@
 
 function Vaalikone(questions, answers) {
 
+    _.values(answers).forEach(person => {
+        // round all answers to integer values
+        person.answers = _.mapValues(person.answers, Math.round);
+    });
+
     const partyAnswers = d3.nest()
         .key(d => d.person.party)
         .entries(answers);
-
-    this.subplotSize = {
-        w: 200,
-        h: 50
-    };
 
     this.questions = questions;
     this.answers = answers;
@@ -21,7 +21,9 @@ function Vaalikone(questions, answers) {
             _.fromPairs(
                 _.keys(questions).map(q => [
                     q,
-                    group.values.map(d => d.answers[q])
+                    group.values
+                        .map(d => d.answers[q])
+                        .filter(x => x !== undefined)
                 ])
             )
         ])
@@ -32,6 +34,10 @@ function Vaalikone(questions, answers) {
     );
     this.answerOptions.sort();
 
+    this.subplotSize = {
+        w: 200,
+        h: 50
+    };
     this.defineColors();
 
     //console.log(this.answerOptions);
@@ -158,7 +164,7 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
     //console.log(byParty);
 
     const that = this;
-    const parties = _.keys(byParty);
+    const parties = _.keys(byParty).filter(p => !_.isEmpty(byParty[p]));
     const means = _.fromPairs(
         parties.map(p => [p, -that.computeMean(byParty[p])]));
 
@@ -194,7 +200,7 @@ Vaalikone.prototype.renderQuestionList = function(party) {
                     questionId,
                     {
                         partyMean: means[party],
-                        meanOfMeans: _.mean(_.values(means))
+                        meanOfMeans: _.mean(_.values(means).filter(_.isFinite))
                     }
                 ];
             })
@@ -206,8 +212,11 @@ Vaalikone.prototype.renderQuestionList = function(party) {
             d.partyValue = byQuestion[d.id].partyMean;
         });
 
+        data = data.filter(d => this.partyAnswerMatrix[party][d.id].length > 0);
         data = _.sortBy(data, d => -(d.partyValue - byQuestion[d.id].meanOfMeans));
     }
+
+    this.questionList.html(''); // clear
 
     const questions = this.questionList
         .selectAll('li a')
@@ -230,7 +239,6 @@ Vaalikone.prototype.renderQuestionList = function(party) {
                 }
                 return '';
             });
-
 };
 
 Vaalikone.prototype.start = function(d3root) {
