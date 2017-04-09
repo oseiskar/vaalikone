@@ -266,6 +266,8 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
 
     //console.log(byParty);
 
+    if (!_.isEmpty(this.opinions)) this.graphColumn.html(''); // clear
+
     const that = this;
     const parties = _.keys(byParty).filter(p => !_.isEmpty(byParty[p]));
     const means = _.fromPairs(
@@ -296,7 +298,7 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
             });
 };
 
-Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
+Vaalikone.prototype.getPersonMatches = function() {
 
     const selected = _.keys(this.opinions);
     const that = this;
@@ -305,7 +307,7 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
         return opinion * ans;
     }
 
-    const personMatches = this.peopleWithAnswers.map(p => {
+    return this.peopleWithAnswers.map(p => {
         const answered = _.pickBy(
             _.pick(p.answers, selected),
             (v, k) => v !== undefined);
@@ -316,8 +318,87 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
                 answerMatch(that.opinions[qId], ans)));
         }
 
-        return { 'person': p.person, 'match': match };
+        return { 'person': p.person, 'match': match, 'answers': answered };
     });
+}
+
+Vaalikone.prototype.renderPeopleMatches = function(party) {
+
+    const personMatches = this.getPersonMatches();
+
+    const allValues = _.uniq(_.flatMap(personMatches, p => p.match));
+    const bins = _.range(d3.min(allValues), d3.max(allValues)+1);
+
+    //console.log(personMatches);
+
+    const people = _.sortBy(
+        personMatches.filter(p => p.person.party === party),
+        p => -p.match);
+
+    //console.log(people);
+
+    this.graphColumn.html('');
+    this.graphColumn
+        .append('h4')
+        .text(party);
+
+    const rows = this.graphColumn
+        .selectAll('div.row')
+        .data(people)
+        .enter()
+        .append('div')
+        .classed('row', true);
+
+    const textColorMap = this.getColorMaps(bins).text;
+
+    rows.append('div')
+        .classed('col', true)
+        .classed('person-name', true)
+        .text(p => p.person.name)
+        .style('color', p => textColorMap(p.match));
+
+    const that = this;
+
+    const personAnsColorMap = this.getColorMaps(this.answerOptions).text;
+
+    rows.append('div')
+        .classed('col', true)
+        .style('font-face', 'monospace')
+        .each(function(p) {
+            d3.select(this)
+                .selectAll('span')
+                .data(_.keys(that.opinions))
+                .enter()
+                    .append('span')
+                    .html(qId => {
+                        const ans = p.answers[qId];
+                        if (ans !== undefined) {
+                            if (ans > 0) {
+                                return '&#8679;'; // arrow up
+                            } else {
+                                return '&#8681;'; // arrow down
+                            }
+                        } else {
+                            return '-';
+                        }
+                    })
+                    .style('color', qId => {
+                        const ans = p.answers[qId];
+                        if (ans !== undefined) {
+                            return personAnsColorMap(ans * that.opinions[qId]);
+                        } else {
+                            return 'gray';
+                        }
+                    })
+                    .attr('title', qId => that.questions[qId]);
+        });
+};
+
+Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
+
+    const that = this;
+
+    const personMatches = this.getPersonMatches();
 
     const allValues = _.uniq(_.flatMap(personMatches, p => p.match));
     const bins = _.range(d3.min(allValues), d3.max(allValues)+1);
@@ -357,8 +438,9 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
             .transition()
             .each(function(party) {
                 function onClick() {
-                    that.renderOpinionMatches(party);
+                    //that.renderOpinionMatches(party);
                     that.renderQuestionList(party);
+                    that.renderPeopleMatches(party);
                 }
                 that.renderPartyRow(d3.select(this),
                     party,
@@ -425,7 +507,6 @@ Vaalikone.prototype.renderQuestionList = function(party) {
     this.questionList.html(''); // clear
 
     const NO_ACTION = 'javascript:void(0)';
-
 
     const questions =  this.questionList
         .selectAll('li')
