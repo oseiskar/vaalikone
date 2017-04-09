@@ -1,20 +1,21 @@
 "use strict";
 /* globals _, d3 */
 
-function Vaalikone(questions, answers) {
+function Vaalikone(questions, peopleWithAnswers) {
 
-    _.values(answers).forEach(person => {
+    peopleWithAnswers.forEach(person => {
         // round all answers to integer values
         person.answers = _.mapValues(person.answers, Math.round);
     });
 
     const partyAnswers = d3.nest()
         .key(d => d.person.party)
-        .entries(answers);
+        .entries(peopleWithAnswers);
 
     this.questions = questions;
-    this.answers = answers;
     this.parties = partyAnswers.map(d => d.key);
+    this.cities = _.uniq(peopleWithAnswers.map(p => p.person.city));
+
     this.partyAnswerMatrix = _.fromPairs(
         partyAnswers.map(group => [
             group.key,
@@ -30,7 +31,7 @@ function Vaalikone(questions, answers) {
     );
 
     this.answerOptions = _.uniq(
-        _.flatten(answers.map(d => _.values(d.answers)))
+        _.flatten(peopleWithAnswers.map(d => _.values(d.answers)))
     );
     this.answerOptions.sort();
 
@@ -42,6 +43,7 @@ function Vaalikone(questions, answers) {
 
     //console.log(this.answerOptions);
     //console.log(this.partyAnswerMatrix);
+    //console.log(this.cities);
 }
 
 Vaalikone.prototype.defineColors = function() {
