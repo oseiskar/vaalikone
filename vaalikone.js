@@ -22,7 +22,7 @@ function preprocessAnswers(peopleWithAnswers) {
 }
 
 function Main(questions, peopleWithAnswers, d3root) {
-    this.cities = _.uniq(peopleWithAnswers.map(p => p.person.city));
+    this.cities = _.uniq(peopleWithAnswers.map(p => p.person.city)).sort();
 
     preprocessAnswers(peopleWithAnswers);
 
