@@ -46,10 +46,17 @@ function Main(questions, peopleWithAnswers, d3root) {
 }
 
 Main.prototype.renderCity = function(city) {
-    new Vaalikone(
-            this.getQuestionsForCity(city),
-            this.getPeopleForCity(city))
-        .start(this.questionList, this.graphColumn);
+
+    let opinions = {};
+    if (this.vaalikone) {
+        opinions = this.vaalikone.opinions;
+    }
+    this.vaalikone = new Vaalikone(
+        this.getQuestionsForCity(city),
+        this.getPeopleForCity(city),
+        opinions);
+
+    this.vaalikone.start(this.questionList, this.graphColumn);
 };
 
 Main.prototype.render = function(d3root) {
@@ -91,7 +98,7 @@ Main.prototype.render = function(d3root) {
     this.renderCity();
 };
 
-function Vaalikone(questions, peopleWithAnswers) {
+function Vaalikone(questions, peopleWithAnswers, opinions) {
 
     const partyAnswers = d3.nest()
         .key(d => d.person.party)
@@ -120,7 +127,7 @@ function Vaalikone(questions, peopleWithAnswers) {
     );
     this.answerOptions.sort();
 
-    this.opinions = {};
+    this.opinions = opinions;
 
     this.subplotSize = {
         w: 200,
@@ -139,14 +146,7 @@ Vaalikone.prototype.toggleOpinion = function(question, newOpinion) {
     } else {
         this.opinions[question] = newOpinion;
     }
-    if (_.isEmpty(this.opinions)) {
-        this.render();
-    } else {
-        //console.log(this.opinions);
-        this.renderQuestionList();
-        this.graphColumn.html('');
-        this.renderOpinionMatches();
-    }
+    this.render();
 };
 
 Vaalikone.prototype.defineColors = function() {
@@ -294,7 +294,7 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
             });
 };
 
-Vaalikone.prototype.renderOpinionMatches = function() {
+Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
 
     const selected = _.keys(this.opinions);
     const that = this;
@@ -354,12 +354,16 @@ Vaalikone.prototype.renderOpinionMatches = function() {
         .merge(subplots)
             .transition()
             .each(function(party) {
-                function onClick() {}
+                function onClick() {
+                    that.renderOpinionMatches(party);
+                    that.renderQuestionList(party);
+                }
                 that.renderPartyRow(d3.select(this),
                     party,
                     byParty[party],
                     bins,
-                    onClick);
+                    onClick,
+                    selectedParty);
             });
 };
 
@@ -367,6 +371,22 @@ Vaalikone.prototype.renderQuestionList = function(party) {
 
     let data = _.toPairs(this.questions)
         .map(d => { return { id: d[0], text: d[1] }; });
+
+    const that = this;
+
+    function opinionWeight(d) {
+        const LARGE_NUMBER = 100000;
+        const op = that.opinions[d.id];
+        if (op === undefined) {
+            return 0;
+        } else {
+            if (op > 0) {
+                return LARGE_NUMBER*2;
+            } else {
+                return LARGE_NUMBER;
+            }
+        }
+    }
 
     if (party) {
 
@@ -392,12 +412,15 @@ Vaalikone.prototype.renderQuestionList = function(party) {
         });
 
         data = data.filter(d => this.partyAnswerMatrix[party][d.id].length > 0);
-        data = _.sortBy(data, d => -(d.partyValue - byQuestion[d.id].meanOfMeans));
+        data = _.sortBy(data, d => {
+            const agreeWeight = d.partyValue - byQuestion[d.id].meanOfMeans;
+            return -(opinionWeight(d) + agreeWeight);
+        });
+    } else {
+        data = _.sortBy(data, d => -opinionWeight(d));
     }
 
     this.questionList.html(''); // clear
-
-    const that = this;
 
     const NO_ACTION = 'javascript:void(0)';
 
@@ -442,7 +465,13 @@ Vaalikone.prototype.renderQuestionList = function(party) {
 
 Vaalikone.prototype.render = function() {
     this.renderQuestionList();
+
     this.graphColumn.html('');
+    if (_.isEmpty(this.opinions)) {
+        this.renderQuestionList();
+    } else {
+        this.renderOpinionMatches();
+    }
 }
 
 Vaalikone.prototype.start = function(questionList, graphColumn) {
