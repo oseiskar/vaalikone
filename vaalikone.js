@@ -1,12 +1,82 @@
 "use strict";
 /* globals _, d3 */
 
-function Vaalikone(questions, peopleWithAnswers) {
+function Main(questions, peopleWithAnswers, d3root) {
+    this.cities = _.uniq(peopleWithAnswers.map(p => p.person.city));
 
     peopleWithAnswers.forEach(person => {
         // round all answers to integer values
         person.answers = _.mapValues(person.answers, Math.round);
     });
+
+    function getPeopleForCity(city) {
+        if (city === undefined) {
+            return peopleWithAnswers;
+        } else {
+            return peopleWithAnswers.filter(p => p.person.city === city);
+        }
+    }
+
+    this.getPeopleForCity = getPeopleForCity;
+
+    this.getQuestionsForCity = function(city) {
+        const people = getPeopleForCity(city);
+        const questionIds = _.uniq(_.flatMap(people, p => _.keys(p.answers)));
+        return _.pick(questions, questionIds);
+    };
+
+    this.render(d3root);
+}
+
+
+Main.prototype.renderCity = function(city) {
+    new Vaalikone(
+            this.getQuestionsForCity(city),
+            this.getPeopleForCity(city))
+        .render(this.questionList, this.graphColumn);
+}
+
+Main.prototype.render = function(d3root) {
+    const container = d3root
+        .append('div')
+        .classed('row', true);
+
+    const leftColumn = container
+        .append('div')
+        .classed('question-column', true);
+
+    const that = this;
+    function cityChanged() {
+        let city = d3.select(this).property('value');
+        if (city === '') {
+            city = undefined;
+        }
+        that.renderCity(city);
+    }
+
+    leftColumn.append('div')
+        .classed('form-group', true)
+            .append('select')
+            .classed('form-control', true)
+            .on('change', cityChanged)
+                .selectAll('option')
+                .data(_.concat([''], this.cities))
+                .enter()
+                .append('option')
+                .text(d => d);
+
+    this.questionList = leftColumn.append('ul');
+
+    this.graphColumn =
+        container
+            .append('div')
+            .classed('graph-column', true);
+
+    this.renderCity();
+}
+
+function Vaalikone(questions, peopleWithAnswers) {
+
 
     const partyAnswers = d3.nest()
         .key(d => d.person.party)
@@ -243,22 +313,10 @@ Vaalikone.prototype.renderQuestionList = function(party) {
             });
 };
 
-Vaalikone.prototype.start = function(d3root) {
-
-    const container = d3root
-        .append('div')
-        .classed('row', true);
-
-    this.questionList =
-        container
-            .append('div')
-            .classed('question-column', true)
-                .append('ul');
-
-    this.graphColumn =
-        container
-            .append('div')
-            .classed('graph-column', true);
+Vaalikone.prototype.render = function(questionList, graphColumn) {
+    this.questionList = questionList;
+    this.graphColumn = graphColumn;
 
     this.renderQuestionList();
+    this.graphColumn.html('');
 };

@@ -70,8 +70,7 @@
         .defer(d3.json, "data/questions.json")
         .defer(d3.json, "data/answers.json")
         .await(function(err, questions, answers) {
-            var vaalikone = new Vaalikone(questions, answers);
-            vaalikone.start(d3.select("#vaalikone"));
+            new Main(questions, answers, d3.select("#vaalikone"));
         });
 </script>
 </html>
