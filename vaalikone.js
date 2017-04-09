@@ -337,10 +337,26 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
 
     //console.log(people);
 
+    const that = this;
+
     this.graphColumn.html('');
-    this.graphColumn
-        .append('h4')
-        .text(party);
+
+    const title =
+        this.graphColumn
+            .append('h4');
+
+    title
+        .append('span')
+        .text(party + ' ');
+
+    title
+        .append('span')
+        .html('&#10060;')
+        .style('font-size', 16) // cross mark;
+        .on('click', d => {
+            that.graphColumn.html('');
+            that.renderOpinionMatches();
+        });
 
     const rows = this.graphColumn
         .selectAll('div.row')
@@ -356,8 +372,6 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
         .classed('person-name', true)
         .text(p => p.person.name)
         .style('color', p => textColorMap(p.match));
-
-    const that = this;
 
     const personAnsColorMap = this.getColorMaps(this.answerOptions).text;
 
@@ -375,6 +389,8 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
                         if (ans !== undefined) {
                             if (ans > 0) {
                                 return '&#8679;'; // arrow up
+                            } else if (ans === 0) {
+                                return '&#9898;'; // white circle
                             } else {
                                 return '&#8681;'; // arrow down
                             }
