@@ -134,8 +134,6 @@ function Vaalikone(questions, peopleWithAnswers, opinions) {
         h: 50
     };
 
-    this.defineColors();
-
     //console.log(this.answerOptions);
     //console.log(this.partyAnswerMatrix);
 }
@@ -149,16 +147,16 @@ Vaalikone.prototype.toggleOpinion = function(question, newOpinion) {
     this.render();
 };
 
-Vaalikone.prototype.defineColors = function() {
+Vaalikone.prototype.getColorMaps = function(bins) {
 
-    const minX = d3.min(this.answerOptions);
+    const minX = d3.min(bins);
     const colorScale = d3.scaleLinear()
-        .domain([minX, d3.max(this.answerOptions)])
+        .domain([minX, d3.max(bins)])
         .range([0, 1]);
 
     const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
 
-    const colorMaps = brightness => {
+    const colorMap = (brightness) => {
         return x => {
             let c = colorScale(x);
 
@@ -175,8 +173,10 @@ Vaalikone.prototype.defineColors = function() {
         };
     };
 
-    this.histogramColormap = colorMaps();
-    this.textColormap = colorMaps(0.7);
+    return {
+        'histogram': colorMap(),
+        'text': colorMap(0.7)
+    };
 };
 
 Vaalikone.prototype.computeMean = function(histogram) {
@@ -201,17 +201,19 @@ Vaalikone.prototype.renderHistogram = function(d3root, data, bins) {
 
     bars.exit().remove();
 
+    const colorMaps = this.getColorMaps(bins);
+
     bars
         .enter()
             .append('circle')
+        .merge(bars)
             .attr('cx', x => (x-minX + 0.5) * barWidth + xStart)
             .attr('cy', maxHeight*0.5)
-            .attr('fill', this.histogramColormap)
-        .merge(bars)
+            .attr('fill', colorMaps.histogram)
             .transition()
             .attr('r', radius);
 
-    return this.textColormap(this.computeMean(data));
+    return colorMaps.text(this.computeMean(data));
 };
 
 Vaalikone.prototype.renderPartyRow = function(d3root, party, data, bins, onClick, selectedParty) {
@@ -318,7 +320,7 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
     });
 
     const allValues = _.uniq(_.flatMap(personMatches, p => p.match));
-    const bins = _.range(d3.min(allValues), d3.max(allValues));
+    const bins = _.range(d3.min(allValues), d3.max(allValues)+1);
 
     //console.log(bins);
 
@@ -450,6 +452,8 @@ Vaalikone.prototype.renderQuestionList = function(party) {
     addArrow(+1, '&#8679;', 'green');
     addArrow(-1, '&#8681;', 'red');
 
+    const textColorMap = this.getColorMaps(this.answerOptions).text;
+
     questions
             .append('a')
             .attr('href', NO_ACTION)
@@ -457,7 +461,7 @@ Vaalikone.prototype.renderQuestionList = function(party) {
             .text(d => ' ' + d.text)
             .attr('style', d => {
                 if (party) {
-                    return 'color: ' + that.textColormap(d.partyValue);
+                    return 'color: ' + textColorMap(d.partyValue);
                 }
                 return '';
             });
