@@ -3,9 +3,6 @@
 <html>
 <head>
     <title>Alt-vaalikone</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.7.4/d3.min.js"
-        integrity="sha256-b5LQ0B6GDT0kJPBUIDTnS2eJp9XuMaRxkAi2+c07RV4="
-        crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"
         integrity="sha256-8E6QUcFg1KTnpEU8TFGhpTGHw5fJqB9vCms3OhAYLqw="
         crossorigin="anonymous"></script>
@@ -33,16 +30,16 @@
               :class="arrowClass(question.id, -1)">&#8681;</a>
           </div>
           <div class="col">
-            <span :style="question.style">{{question.question}}</span>
+            <span :style="textColorMap(question.score)">{{question.question}}</span>
           </div>
         </div>
       </div>
       <div class="graph-column">
-        <div v-for="party in sortedParties" :style="party.style" class="party-row" v-if="!selected.party">
+        <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selected.party">
           <a class="party-text" @click="toggleSelectedParty(party.name)"
             :class="{ strong: selected.party === party.name }">{{party.name}}</a>
           <svg v-if="party.bins" :width="style.plot.width" :height="style.plot.height">
-            <circle v-for="c in party.bins" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="c.color"/>
+            <circle v-for="c in party.bins" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="binColorMap(c.score)"/>
           </svg>
         </div>
         <div v-if="selected.party">
@@ -52,13 +49,13 @@
           </div>
           <div class="row" v-for="person in sortedCandidates">
             <div class="col">
-              <span :style="person.style">{{person.name}}</span>
+              <span :style="textColorMap(person.score)">{{person.name}}</span>
               <small v-if="!selected.city" style="color: gray"> ({{person.city}})</small></div>
             <div class="col">
-              <span v-for="answer in person.answers" :style="answer.style">
-                <span v-if="!answer.value">&#9898;</span>
-                <span v-if="answer.value > 0">&#8679;</span>
-                <span v-if="answer.value < 0">&#8681;</span>
+              <span v-for="value in person.answers" :style="textColorMap(value)">
+                <span v-if="!value">&#9898;</span>
+                <span v-if="value > 0">&#8679;</span>
+                <span v-if="value < 0">&#8681;</span>
               </span>
             </div>
           </div>
@@ -70,7 +67,7 @@
 <script type="text/javascript">
 "use strict";
 
-let model;
+let model = new Model([]);
 
 const app = new Vue({
   el: '#vuemain',
@@ -88,11 +85,37 @@ const app = new Vue({
       plot: {
         width: 300,
         height: 30
-      },
-      textColorMapBrightness: 0.7
+      }
     }
   },
   methods: {
+    colorMap(x, brightness) {
+      const minX = this.options.minScore;
+      const maxX = this.options.maxScore;
+      const colorScale = x => (x - minX) / (maxX - minX);
+      const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
+
+      let c = colorScale(x);
+
+      let sat = Math.sqrt(Math.abs(c - 0.5)*2.0);
+      const bright = brightness || sat*0.3 + 0.7;
+
+      return rgb([
+          1.0 - (c-2/3)*3,
+          c*2,
+          0.0
+        ]
+        .map(v => Math.min(Math.max(v, 0), 1))
+        .map(v => (v*sat + 1.0 - sat)*bright));
+    },
+    textColorMap(x) {
+      if (x === undefined || x === null) return null;
+      return 'color: ' + this.colorMap(x, 0.7);
+    },
+    binColorMap(x) {
+      if (x === undefined || x === null) return null;
+      return this.colorMap(x, 0.9);
+    },
     toggleSelectedParty(party) {
       if (this.selected.party === party) {
         this.selected.party = null;
@@ -110,14 +133,6 @@ const app = new Vue({
       if (this.opinions[id] === sign) {
         return 'selected-' + (sign > 0 ? 'positive' : 'negative');
       }
-    },
-    colorMap(brightness = 1.0) {
-      return Model.getColorMap(
-        [this.options.minScore, this.options.maxScore],
-        brightness);
-    },
-    textColorMap() {
-      return this.colorMap(0.7);
     },
     setAnswerData(answers) {
       model = new Model(answers);
@@ -158,61 +173,30 @@ const app = new Vue({
     },
 
     sortedParties() {
-      if (!this.anyOpinions) return this.parties.map(p => ({ name: p }));
+      if (!this.anyOpinions)
+        return this.parties.map(p => ({ name: p }));
 
-      const parties = this.parties.map(party => ({
-        name: party,
-        results: model.scorePeople(
-          this.nonEmptyOpinions,
-          this.candidates.filter(person => person.party === party))
-      }));
-
-      let allBins = {};
-      parties.forEach(p =>
-        Object.keys(p.results.bins).forEach(b => {
-          allBins[b] = true;
-        })
-      );
-      allBins = Object.keys(allBins).map(b => parseFloat(b)).sort((a,b) => a-b);
-
-      const textColorMap = this.textColorMap();
-      const binColorMap = this.colorMap(0.9);
-
-      parties.forEach(party => {
-        party.style = 'color: ' + textColorMap(party.results.score);
-
-        const xDelta = this.style.plot.width / allBins.length;
-        let cx = xDelta*0.5;
-        const maxR = this.style.plot.height * 0.7;
-        party.bins = allBins.map(b => {
-          cx += xDelta;
-          return {
-            cx: cx - xDelta,
-            cy: this.style.plot.height*0.5,
-            r: Math.sqrt(party.results.bins[b]) * maxR,
-            color: binColorMap(b)
-          };
-        })
-        .filter(c => c.r > 0);
+      const maxR = this.style.plot.height * 0.7;
+      return model.sortedParties(this.parties, this.nonEmptyOpinions).map(party => {
+        party.score = party.results.score;
+        party.bins = party.bins.map(b => ({
+          cx: b.relX * this.style.plot.width,
+          cy: this.style.plot.height*0.5,
+          r: Math.sqrt(b.weight) * maxR,
+          score: b.score
+        }));
+        return party;
       });
-
-      parties.sort((a,b) => b.results.score - a.results.score);
-      return parties;
     },
 
     sortedQuestions() {
       if (!this.selected.party) return this.questions;
 
-      const colorMap = this.textColorMap();
       const partyPeople = this.candidates.filter(p => p.party === this.selected.party);
-      const questions = this.questions.map(question => {
-        const score = model.scorePeople({ [question.id]: 1 }, partyPeople).score;
-        return {
-          score,
-          style: 'color: ' + colorMap(score),
-          ...question
-        }
-      })
+      const questions = this.questions.map(question => ({
+        score: model.scorePeople({ [question.id]: 1 }, partyPeople).score,
+        ...question
+      }))
       .sort((a,b) => b.score - a.score);
 
       return questions
@@ -228,20 +212,11 @@ const app = new Vue({
 
       if (!this.anyOpinions) return partyPeople;
 
-      const colorMap = this.textColorMap();
-      return partyPeople.map(person => {
-        const score = model.scorePeople(this.nonEmptyOpinions, [person]).score;
-        const answers = model.getPersonAnswerScores(person,  this.nonEmptyOpinions);
-        return {
-          score,
-          style: 'color: ' + colorMap(score),
-          answers: answers.map(x => ({
-            value: x,
-            style: 'color: ' + colorMap(x)
-          })),
-          ...person
-        }
-      })
+      return partyPeople.map(person => ({
+        score: model.scorePeople(this.nonEmptyOpinions, [person]).score,
+        answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions),
+        ...person
+      }))
       .sort((a,b) => b.score - a.score);
     }
   }

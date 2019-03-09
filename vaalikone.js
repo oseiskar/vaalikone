@@ -1,5 +1,4 @@
 'use strict';
-/* globals _, d3 */
 
 class Model {
   constructor(answers) {
@@ -65,28 +64,32 @@ class Model {
     });
   }
 
-  static getColorMap(scores, brightness) {
-    const minX = Math.min(...scores);
+  sortedParties(parties, opinions) {
+    parties = parties.map(party => ({
+      name: party,
+      results: this.scorePeople(
+        opinions,
+        this.candidates.filter(person => person.party === party))
+    }));
 
-    const colorScale = d3.scaleLinear()
-      .domain([minX, Math.max(...scores)])
-      .range([0, 1]);
+    let allBins = {};
+    parties.forEach(p =>
+      Object.keys(p.results.bins).forEach(b => {
+        allBins[b] = true;
+      })
+    );
+    allBins = Object.keys(allBins).map(b => parseFloat(b)).sort((a,b) => a-b);
 
-    const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
+    parties.forEach(party => {
+      let i = 0;
+      party.bins = allBins.map(b => ({
+          relX: (++i - 0.5) / allBins.length,
+          score: b,
+          weight: party.results.bins[b],
+        }))
+      .filter(c => c.weight > 0);
+    });
 
-    return x => {
-      let c = colorScale(x);
-
-      let sat = Math.sqrt(Math.abs(c - 0.5)*2.0);
-      const bright = brightness || sat*0.3 + 0.7;
-
-      return rgb([
-          1.0 - (c-2/3)*3,
-          c*2,
-          0.0
-        ]
-        .map(v => Math.min(Math.max(v, 0), 1))
-        .map(v => (v*sat + 1.0 - sat)*bright));
-    };
+    return parties.sort((a,b) => b.results.score - a.results.score);
   }
 }
