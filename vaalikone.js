@@ -179,10 +179,15 @@ Vaalikone.prototype.renderHistogram = function(d3root, data, bins) {
     const barWidth = this.subplotSize.w / (bins.length+1);
     const minX = d3.min(bins);
     const maxR = barWidth / Math.sqrt(2);
+    const minR = 1;
     const maxHeight = this.subplotSize.h;
     const xStart = 0.5 / Math.sqrt(2) * barWidth;
 
-    const radius = x => Math.sqrt((data[x] || 0) / total) * maxR;
+    const radius = x => {
+      const r = Math.sqrt((data[x] || 0) / total) * maxR;
+      if (r === 0) return r;
+      return Math.max(r, minR);
+    };
 
     const bars = d3root
         .selectAll('circle')
