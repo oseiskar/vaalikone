@@ -125,7 +125,7 @@ function Vaalikone(questions, peopleWithAnswers, opinions) {
 
     this.subplotSize = {
         w: 200,
-        h: 50
+        h: 30
     };
 }
 
