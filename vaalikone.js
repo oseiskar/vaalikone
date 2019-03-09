@@ -1,9 +1,7 @@
 'use strict';
 /* globals _, d3 */
 
-
 function preprocessAnswers(peopleWithAnswers) {
-
     peopleWithAnswers.forEach(person => {
         // round all answers to integer values
         person.answers = _.mapValues(person.answers, Math.round);
@@ -46,7 +44,6 @@ function Main(questions, peopleWithAnswers, d3root) {
 }
 
 Main.prototype.renderCity = function(city) {
-
     let opinions = {};
     if (this.vaalikone) {
         opinions = this.vaalikone.opinions;
@@ -69,23 +66,22 @@ Main.prototype.render = function(d3root) {
         .classed('question-column', true);
 
     const that = this;
-
     leftColumn.append('div')
         .classed('form-group', true)
             .append('select')
             .classed('form-control', true)
             .on('change', function () {
-                    let city = d3.select(this).property('value');
-                    if (city === '') {
-                        city = undefined;
-                    }
-                    that.renderCity(city);
-                })
-                .selectAll('option')
-                .data(_.concat([''], this.cities))
-                .enter()
-                .append('option')
-                .text(d => d);
+                let city = d3.select(this).property('value');
+                if (city === '') {
+                    city = undefined;
+                }
+                that.renderCity(city);
+            })
+            .selectAll('option')
+            .data(_.concat([''], this.cities))
+            .enter()
+            .append('option')
+            .text(d => d);
 
     this.questionList = leftColumn.append('ul');
 
@@ -98,7 +94,6 @@ Main.prototype.render = function(d3root) {
 };
 
 function Vaalikone(questions, peopleWithAnswers, opinions) {
-
     const partyAnswers = d3.nest()
         .key(d => d.person.party)
         .entries(peopleWithAnswers);
@@ -132,9 +127,6 @@ function Vaalikone(questions, peopleWithAnswers, opinions) {
         w: 200,
         h: 50
     };
-
-    //console.log(this.answerOptions);
-    //console.log(this.partyAnswerMatrix);
 }
 
 Vaalikone.prototype.toggleOpinion = function(question, newOpinion) {
@@ -147,7 +139,6 @@ Vaalikone.prototype.toggleOpinion = function(question, newOpinion) {
 };
 
 Vaalikone.prototype.getColorMaps = function(bins) {
-
     const minX = d3.min(bins);
     const colorScale = d3.scaleLinear()
         .domain([minX, d3.max(bins)])
@@ -183,7 +174,6 @@ Vaalikone.prototype.computeMean = function(histogram) {
 };
 
 Vaalikone.prototype.renderHistogram = function(d3root, data, bins) {
-
     const total = _.sum(_.values(data));
 
     const barWidth = this.subplotSize.w / (bins.length+1);
@@ -216,7 +206,6 @@ Vaalikone.prototype.renderHistogram = function(d3root, data, bins) {
 };
 
 Vaalikone.prototype.renderPartyRow = function(d3root, party, data, bins, onClick, selectedParty) {
-
     const title = d3root
         .selectAll('div.title')
         .data([party]);
@@ -255,7 +244,6 @@ Vaalikone.prototype.renderPartyRow = function(d3root, party, data, bins, onClick
 };
 
 Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
-
     const byParty = _.mapValues(this.partyAnswerMatrix,
         answers => _.fromPairs(d3.nest()
             .key(d => d).sortKeys(d3.ascending)
@@ -267,10 +255,9 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
 
     if (!_.isEmpty(this.opinions)) this.graphColumn.html(''); // clear
 
-    const that = this;
     const parties = _.keys(byParty).filter(p => !_.isEmpty(byParty[p]));
     const means = _.fromPairs(
-        parties.map(p => [p, that.computeMean(byParty[p])]));
+        parties.map(p => [p, this.computeMean(byParty[p])]));
 
     const subplots = this.graphColumn
         .selectAll('div.row')
@@ -278,6 +265,7 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
 
     subplots.exit().remove();
 
+    const that = this;
     subplots.enter()
             .append('div')
             .classed('row', true)
@@ -298,9 +286,7 @@ Vaalikone.prototype.renderQuestion = function(questionId, selectedParty) {
 };
 
 Vaalikone.prototype.getPersonMatches = function() {
-
     const selected = _.keys(this.opinions);
-    const that = this;
 
     function answerMatch(opinion, ans) {
         return opinion * ans;
@@ -314,7 +300,7 @@ Vaalikone.prototype.getPersonMatches = function() {
         let match = 0;
         if (!_.isEmpty(answered)) {
             match = _.sum(_.map(answered, (ans, qId) =>
-                answerMatch(that.opinions[qId], ans)));
+                answerMatch(this.opinions[qId], ans)));
         }
 
         return { 'person': p.person, 'match': match, 'answers': answered };
@@ -322,21 +308,14 @@ Vaalikone.prototype.getPersonMatches = function() {
 };
 
 Vaalikone.prototype.renderPeopleMatches = function(party) {
-
     const personMatches = this.getPersonMatches();
 
     const allValues = _.uniq(_.flatMap(personMatches, p => p.match));
     const bins = _.range(d3.min(allValues), d3.max(allValues)+1);
 
-    //console.log(personMatches);
-
     const people = _.sortBy(
         personMatches.filter(p => p.person.party === party),
         p => -p.match);
-
-    //console.log(people);
-
-    const that = this;
 
     this.graphColumn.html('');
 
@@ -353,8 +332,8 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
         .html('&#10060;')
         .style('font-size', 16) // cross mark;
         .on('click', d => {
-            that.graphColumn.html('');
-            that.renderOpinionMatches();
+            this.graphColumn.html('');
+            this.renderOpinionMatches();
         });
 
     const rows = this.graphColumn
@@ -374,6 +353,7 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
 
     const personAnsColorMap = this.getColorMaps(this.answerOptions).text;
 
+    const that = this;
     rows.append('div')
         .classed('col', true)
         .style('font-face', 'monospace')
@@ -410,22 +390,15 @@ Vaalikone.prototype.renderPeopleMatches = function(party) {
 };
 
 Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
-
-    const that = this;
-
     const personMatches = this.getPersonMatches();
 
     const allValues = _.uniq(_.flatMap(personMatches, p => p.match));
     const bins = _.range(d3.min(allValues), d3.max(allValues)+1);
 
-    //console.log(bins);
-
     const partyPeople = _.fromPairs(d3.nest()
         .key(p => p.person.party)
         .entries(personMatches)
         .map(obj => [obj.key, obj.values]));
-
-    //console.log(partyPeople);
 
     const byParty =  _.mapValues(partyPeople,
         people => _.fromPairs(d3.nest()
@@ -434,18 +407,14 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
             .entries(people.map(p => p.match))
             .map(obj => [obj.key, obj.value])));
 
-    //console.log(byParty);
-
-    const means = _.mapValues(byParty, that.computeMean);
-
-    //console.log(means);
-
+    const means = _.mapValues(byParty, (data) => this.computeMean(data));
     const subplots = this.graphColumn
         .selectAll('div.row')
         .data(_.sortBy(_.keys(byParty), p => -means[p]));
 
     subplots.exit().remove();
 
+    const that = this;
     subplots.enter()
             .append('div')
             .classed('row', true)
@@ -467,15 +436,12 @@ Vaalikone.prototype.renderOpinionMatches = function(selectedParty) {
 };
 
 Vaalikone.prototype.renderQuestionList = function(party) {
-
     let data = _.toPairs(this.questions)
         .map(d => { return { id: d[0], text: d[1] }; });
 
-    const that = this;
-
-    function opinionWeight(d) {
+    const opinionWeight = (d) => {
         const LARGE_NUMBER = 100000;
-        const op = that.opinions[d.id];
+        const op = this.opinions[d.id];
         if (op === undefined) {
             return 0;
         } else {
@@ -485,10 +451,9 @@ Vaalikone.prototype.renderQuestionList = function(party) {
                 return LARGE_NUMBER;
             }
         }
-    }
+    };
 
     if (party) {
-
         const byQuestion = _.fromPairs(_.keys(this.questions)
             .map(questionId => {
                 const means =_.mapValues(this.partyAnswerMatrix,
@@ -529,21 +494,21 @@ Vaalikone.prototype.renderQuestionList = function(party) {
         .enter()
             .append('li');
 
-    function addArrow(value, symbol, color) {
+    const addArrow = (value, symbol, color) => {
         questions
             .append('a')
             .attr('href', NO_ACTION)
             .classed('strong', true)
             .html(symbol)
             .style('color', d => {
-                if (that.opinions[d.id] === value) {
+                if (this.opinions[d.id] === value) {
                     return color;
                 } else {
                     return 'black';
                 }
             })
-            .on('mousedown', d => that.toggleOpinion(d.id, value));
-    }
+            .on('mousedown', d => this.toggleOpinion(d.id, value));
+    };
 
     addArrow(+1, '&#8679;', 'green');
     addArrow(-1, '&#8681;', 'red');
@@ -553,7 +518,7 @@ Vaalikone.prototype.renderQuestionList = function(party) {
     questions
             .append('a')
             .attr('href', NO_ACTION)
-            .on('mousedown', d => that.renderQuestion(d.id, party))
+            .on('mousedown', d => this.renderQuestion(d.id, party))
             .text(d => ' ' + d.text)
             .attr('style', d => {
                 if (party) {
