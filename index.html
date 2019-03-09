@@ -19,6 +19,12 @@
 <body>
     <div id="vuemain" class="row">
       <div class="question-column">
+        <div class="select-row">
+          <select v-model="selected.city" class="form-control">
+            <option :value="null">-</option>
+            <option v-for="city in cities" :value="city">{{city}}</option>
+          </select>
+        </div>
         <div v-for="question in sortedQuestions" class="row question-row">
           <div class="col-2" style="text-align: right">
             <a class="btn" @click="toggleOpinion(question.id, 1)"
@@ -27,10 +33,7 @@
               :class="arrowClass(question.id, -1)">&#8681;</a>
           </div>
           <div class="col">
-            <span
-              @click="toggleSelectedQuestion(question.id)"
-              :style="question.style"
-              :class="{ strong: selected.question === question.id }">{{question.question}}</span>
+            <span :style="question.style">{{question.question}}</span>
           </div>
         </div>
       </div>
@@ -47,8 +50,10 @@
             <h3 class="col-9" style="text-align: center">{{selected.party}}<h3>
             <small class="col-3" style="text-align: right" @click="selected.party = null">X</small>
           </div>
-          <div class="row" v-for="person in sortedCandidates" :style="person.style">
-            <div class="col">{{person.name}}</div>
+          <div class="row" v-for="person in sortedCandidates">
+            <div class="col">
+              <span :style="person.style">{{person.name}}</span>
+              <small v-if="!selected.city" style="color: gray"> ({{person.city}})</small></div>
             <div class="col">
               <span v-for="answer in person.answers" :style="answer.style">
                 <span v-if="!answer.value">&#9898;</span>
@@ -71,12 +76,12 @@ const app = new Vue({
   el: '#vuemain',
   data: {
     questions: [],
-    parties: [],
+    allParties: [],
     options: [],
-    citites: [],
+    cities: [],
     selected: {
-      question: null,
-      party: null
+      party: null,
+      city: null
     },
     opinions: {},
     style: {
@@ -88,14 +93,6 @@ const app = new Vue({
     }
   },
   methods: {
-    toggleSelectedQuestion(id) {
-      if (this.selected.question === id) {
-        this.selected.question = null;
-      }
-      else {
-        this.selected.question = id;
-      }
-    },
     toggleSelectedParty(party) {
       if (this.selected.party === party) {
         this.selected.party = null;
@@ -127,7 +124,7 @@ const app = new Vue({
       this.cities = [...model.cities];
       this.options = {...model.options};
       this.candidates = [...model.candidates];
-      this.parties = [...model.parties];
+      this.allParties = [...model.parties];
     }
   },
   watch: {
@@ -139,6 +136,15 @@ const app = new Vue({
     }
   },
   computed: {
+    parties() {
+      return this.allParties.filter(party => {
+        return !this.selected.city ||
+          this.candidates.filter(p =>
+            p.city === this.selected.city &&
+            p.party === party).length > 0;
+      });
+    },
+
     nonEmptyOpinions() {
       const opinions = {};
       for (const [key, value] of Object.entries(this.opinions)) {
@@ -216,7 +222,10 @@ const app = new Vue({
 
     sortedCandidates() {
       if (!this.selected.party) return [];
-      let partyPeople = this.candidates.filter(p => p.party === this.selected.party);
+      let partyPeople = this.candidates
+        .filter(p => p.party === this.selected.party)
+        .filter(p => !this.selected.city || p.city === this.selected.city);
+
       if (!this.anyOpinions) return partyPeople;
 
       const colorMap = this.textColorMap();
