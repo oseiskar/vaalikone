@@ -2,15 +2,15 @@ body {
     margin: 2%;
 }
 
-.title {
-  margin-top: 4px;
+.party-row {
   text-align: right;
   font-weight: bold;
+  padding-right: 20%;
 }
 
-h4 {
-    text-align: center;
-    margin: 20px;
+.party-text {
+  vertical-align: top;
+  display: inline-block;
 }
 
 .graph-column {
@@ -55,4 +55,12 @@ a:hover {
 li {
     margin-top: 8px;
     margin-bottom: 8px;
+}
+
+a.selected-positive {
+  color: green !important;
+}
+
+a.selected-negative {
+  color: red !important;
 }

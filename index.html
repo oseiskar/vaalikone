@@ -12,21 +12,235 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
         integrity="sha256-rr9hHBQ43H7HSOmmNkxzQGazS/Khx+L8ZRHteEY1tQ4="
         crossorigin="anonymous" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.min.js" crossorigin="anonymous">
+    </script>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="vaalikone">
+    <div id="vuemain" class="row">
+      <div class="question-column">
+        <ul>
+          <li v-for="question in sortedQuestions">
+            <a @click="toggleOpinion(question.id, 1)"
+              :class="arrowClass(question.id, 1)">&#8679;</a>
+            <a @click="toggleOpinion(question.id, -1)"
+              :class="arrowClass(question.id, -1)">&#8681;</a>
+            <span
+              @click="toggleSelectedQuestion(question.id)"
+              :style="question.style"
+              :class="{ strong: selected.question === question.id }">{{question.question}}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="graph-column">
+        <div v-for="party in sortedParties" :style="party.style" class="party-row" v-if="!selected.party">
+          <a class="party-text" @click="toggleSelectedParty(party.name)"
+            :class="{ strong: selected.party === party.name }">{{party.name}}</a>
+          <svg v-if="party.bins" :width="style.plot.width" :height="style.plot.height">
+            <circle v-for="c in party.bins" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="c.color"/>
+          </svg>
+        </div>
+        <div v-if="selected.party">
+          <div class="row">
+            <h3 class="col-9" style="text-align: center">{{selected.party}}<h3>
+            <small class="col-3" style="text-align: right" @click="selected.party = null">X</small>
+          </div>
+          <div class="row" v-for="person in sortedCandidates" :style="person.style">
+            <div class="col">{{person.name}}</div>
+            <div class="col">
+              <span v-for="answer in person.answers" :style="answer.style">
+                <span v-if="!answer.value">&#9898;</span>
+                <span v-if="answer.value > 0">&#8679;</span>
+                <span v-if="answer.value < 0">&#8681;</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </body>
 <script src="vaalikone.js"></script>
 <script type="text/javascript">
-    "use strict";
+"use strict";
 
-    d3.queue()
-        .defer(d3.json, "data/questions.json")
-        .defer(d3.json, "data/answers.json")
-        .await(function(err, questions, answers) {
-            new Main(questions, answers, d3.select("#vaalikone"));
-        });
+let model;
+
+const app = new Vue({
+  el: '#vuemain',
+  data: {
+    questions: [],
+    parties: [],
+    options: [],
+    citites: [],
+    selected: {
+      question: null,
+      party: null
+    },
+    opinions: {},
+    style: {
+      plot: {
+        width: 300,
+        height: 30
+      },
+      textColorMapBrightness: 0.7
+    }
+  },
+  methods: {
+    toggleSelectedQuestion(id) {
+      if (this.selected.question === id) {
+        this.selected.question = null;
+      }
+      else {
+        this.selected.question = id;
+      }
+    },
+    toggleSelectedParty(party) {
+      if (this.selected.party === party) {
+        this.selected.party = null;
+      } else {
+        this.selected.party = party;
+      }
+    },
+    toggleOpinion(id, sign) {
+      if (this.opinions[id] === sign)
+        this.opinions[id] = null;
+      else
+        this.opinions[id] = sign;
+    },
+    arrowClass(id, sign) {
+      if (this.opinions[id] === sign) {
+        return 'selected-' + (sign > 0 ? 'positive' : 'negative');
+      }
+    },
+    colorMap(brightness = 1.0) {
+      return Model.getColorMap(
+        [this.options.minScore, this.options.maxScore],
+        brightness);
+    },
+    textColorMap() {
+      return this.colorMap(0.7);
+    },
+    setAnswerData(answers) {
+      model = new Model(answers);
+      this.cities = [...model.cities];
+      this.options = {...model.options};
+      this.candidates = [...model.candidates];
+      this.parties = [...model.parties];
+    }
+  },
+  watch: {
+    questions() {
+      // make all opinions reactive
+      this.questions.forEach(question => {
+        Vue.set(this.opinions, question.id, null);
+      });
+    }
+  },
+  computed: {
+    nonEmptyOpinions() {
+      const opinions = {};
+      for (const [key, value] of Object.entries(this.opinions)) {
+        if (value) opinions[key] = value;
+      }
+      return opinions;
+    },
+
+    anyOpinions() {
+      return Object.keys(this.nonEmptyOpinions).length > 0;
+    },
+
+    sortedParties() {
+      if (!this.anyOpinions) return this.parties.map(p => ({ name: p }));
+
+      const parties = this.parties.map(party => ({
+        name: party,
+        results: model.scorePeople(
+          this.nonEmptyOpinions,
+          this.candidates.filter(person => person.party === party))
+      }));
+
+      let allBins = {};
+      parties.forEach(p =>
+        Object.keys(p.results.bins).forEach(b => {
+          allBins[b] = true;
+        })
+      );
+      allBins = Object.keys(allBins).map(b => parseFloat(b)).sort((a,b) => a-b);
+
+      const textColorMap = this.textColorMap();
+      const binColorMap = this.colorMap(0.9);
+
+      parties.forEach(party => {
+        party.style = 'color: ' + textColorMap(party.results.score);
+
+        const xDelta = this.style.plot.width / allBins.length;
+        let cx = xDelta*0.5;
+        const maxR = this.style.plot.height * 0.7;
+        party.bins = allBins.map(b => {
+          cx += xDelta;
+          return {
+            cx: cx - xDelta,
+            cy: this.style.plot.height*0.5,
+            r: Math.sqrt(party.results.bins[b]) * maxR,
+            color: binColorMap(b)
+          };
+        })
+        .filter(c => c.r > 0);
+      });
+
+      parties.sort((a,b) => b.results.score - a.results.score);
+      return parties;
+    },
+
+    sortedQuestions() {
+      if (!this.selected.party) return this.questions;
+
+      const colorMap = this.textColorMap();
+      const partyPeople = this.candidates.filter(p => p.party === this.selected.party);
+      return this.questions.map(question => {
+        const score = model.scorePeople({ [question.id]: 1 }, partyPeople).score;
+        return {
+          score,
+          style: 'color: ' + colorMap(score),
+          ...question
+        }
+      })
+      .sort((a,b) => b.score - a.score);
+    },
+
+    sortedCandidates() {
+      if (!this.selected.party) return [];
+      let partyPeople = this.candidates.filter(p => p.party === this.selected.party);
+      if (!this.anyOpinions) return partyPeople;
+
+      const colorMap = this.textColorMap();
+      return partyPeople.map(person => {
+        const score = model.scorePeople(this.nonEmptyOpinions, [person]).score;
+        const answers = model.getPersonAnswerScores(person,  this.nonEmptyOpinions);
+        return {
+          score,
+          style: 'color: ' + colorMap(score),
+          answers: answers.map(x => ({
+            value: x,
+            style: 'color: ' + colorMap(x)
+          })),
+          ...person
+        }
+      })
+      .sort((a,b) => b.score - a.score);
+    }
+  }
+});
+
+Promise.all(
+  ['data/questions.json', 'data/answers.json']
+  .map(file => fetch(file).then(res => res.json()))
+).then(([questions, answers]) => {
+  app.questions = Object.keys(questions).map(q => ({
+    id: q,
+    question: questions[q]
+  }));
+  app.setAnswerData(answers);
+});
 </script>
 </html>
