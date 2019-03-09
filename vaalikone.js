@@ -69,19 +69,18 @@ Main.prototype.render = function(d3root) {
         .classed('question-column', true);
 
     const that = this;
-    function cityChanged() {
-        let city = d3.select(this).property('value');
-        if (city === '') {
-            city = undefined;
-        }
-        that.renderCity(city);
-    }
 
     leftColumn.append('div')
         .classed('form-group', true)
             .append('select')
             .classed('form-control', true)
-            .on('change', cityChanged)
+            .on('change', function () {
+                    let city = d3.select(this).property('value');
+                    if (city === '') {
+                        city = undefined;
+                    }
+                    that.renderCity(city);
+                })
                 .selectAll('option')
                 .data(_.concat([''], this.cities))
                 .enter()
@@ -320,7 +319,7 @@ Vaalikone.prototype.getPersonMatches = function() {
 
         return { 'person': p.person, 'match': match, 'answers': answered };
     });
-}
+};
 
 Vaalikone.prototype.renderPeopleMatches = function(party) {
 
@@ -573,7 +572,7 @@ Vaalikone.prototype.render = function() {
     } else {
         this.renderOpinionMatches();
     }
-}
+};
 
 Vaalikone.prototype.start = function(questionList, graphColumn) {
     this.questionList = questionList;
