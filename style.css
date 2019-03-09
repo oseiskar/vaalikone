@@ -13,6 +13,10 @@ body {
   display: inline-block;
 }
 
+.question-row {
+  margin-bottom: 1em;
+}
+
 .graph-column {
     position: fixed;
     top: 10;
@@ -41,6 +45,13 @@ a:focus {
     font-weight: bold;
 }
 
+a.btn {
+  border: 1px solid gray;
+  border-radius: 5px;
+  margin-right: 3px;
+  padding: 4px;
+}
+
 a:hover {
     color: black;
     text-decoration: none;
@@ -58,9 +69,11 @@ li {
 }
 
 a.selected-positive {
-  color: green !important;
+  background: green !important;
+  color: white !important;
 }
 
 a.selected-negative {
-  color: red !important;
+  background: red !important;
+  color: white !important;
 }

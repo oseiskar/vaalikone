@@ -19,18 +19,20 @@
 <body>
     <div id="vuemain" class="row">
       <div class="question-column">
-        <ul>
-          <li v-for="question in sortedQuestions">
-            <a @click="toggleOpinion(question.id, 1)"
+        <div v-for="question in sortedQuestions" class="row question-row">
+          <div class="col-2" style="text-align: right">
+            <a class="btn" @click="toggleOpinion(question.id, 1)"
               :class="arrowClass(question.id, 1)">&#8679;</a>
-            <a @click="toggleOpinion(question.id, -1)"
+            <a class="btn" @click="toggleOpinion(question.id, -1)"
               :class="arrowClass(question.id, -1)">&#8681;</a>
+          </div>
+          <div class="col">
             <span
               @click="toggleSelectedQuestion(question.id)"
               :style="question.style"
               :class="{ strong: selected.question === question.id }">{{question.question}}</span>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
       <div class="graph-column">
         <div v-for="party in sortedParties" :style="party.style" class="party-row" v-if="!selected.party">
@@ -197,7 +199,7 @@ const app = new Vue({
 
       const colorMap = this.textColorMap();
       const partyPeople = this.candidates.filter(p => p.party === this.selected.party);
-      return this.questions.map(question => {
+      const questions = this.questions.map(question => {
         const score = model.scorePeople({ [question.id]: 1 }, partyPeople).score;
         return {
           score,
@@ -206,6 +208,10 @@ const app = new Vue({
         }
       })
       .sort((a,b) => b.score - a.score);
+
+      return questions
+        .filter(q => this.nonEmptyOpinions[q.id])
+        .concat(questions.filter(q => !this.nonEmptyOpinions[q.id]));
     },
 
     sortedCandidates() {
