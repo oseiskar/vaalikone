@@ -1,3 +1,5 @@
 {
-    "esnext": true
+    "esnext": true,
+    "-W097": false, // function form of use strict
+    "-W107": false  // script url (javascript:void(0))
 }
