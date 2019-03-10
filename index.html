@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="vuemain" class="row">
+    <div id="vuemain">
       <div class="question-column">
         <div class="select-row">
           <select v-model="selected.city" class="form-control">
@@ -34,11 +34,14 @@
           </div>
         </div>
       </div>
-      <div class="result-column">
+      <div class="result-column" id="result-box">
         <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selected.party">
           <div class="party-col-spacer"></div>
           <div class="party-col">
-            <a class="party-text" @click="toggleSelectedParty(party.name)"
+            <span v-if="party.ellipsis" :style="textColorMap(0)" class="ellipsis">
+              &vellip;
+            </span>
+            <a v-else class="party-text" @click="toggleSelectedParty(party.name)"
               :class="{ strong: selected.party === party.name }">{{party.name}}</a>
           </div>
           <div class="bin-col">
@@ -54,15 +57,18 @@
             <a class="col-3" style="text-align: right" @click="selected.party = null" class="btn">X</a>
           </div>
           <div class="row" v-for="person in sortedCandidates">
-            <div class="col-8">
+            <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">
+              &vellip;
+            </div>
+            <div v-else class="col person-col">
               <span :style="textColorMap(person.score)">{{person.name}}</span>
               <small v-if="!selected.city" style="color: gray"> ({{person.city}})</small>
             </div>
-            <div class="col-4">
-              <span v-for="value in person.answers" :style="textColorMap(value)">
-                <span v-if="!value">&#9898;</span>
-                <span v-if="value > 0">&#8679;</span>
-                <span v-if="value < 0">&#8681;</span>
+            <div class="col" v-if="anyOpinions">
+              <span v-for="ans in person.answers" :style="textColorMap(ans.matchScore)" class="arrow-col" :title="ans.question">
+                <span v-if="!ans.answerScore">&#9898;</span>
+                <span v-if="ans.answerScore > 0">&#8679;</span>
+                <span v-if="ans.answerScore < 0">&#8681;</span>
               </span>
             </div>
           </div>

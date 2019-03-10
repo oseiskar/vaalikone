@@ -1,5 +1,5 @@
 'use strict';
-/* globals Model, Vue */
+/* globals Model, Vue, document */
 
 function createApp(vueElement) {
   let model = new Model([]);
@@ -20,7 +20,8 @@ function createApp(vueElement) {
         plot: {
           width: 200,
           height: 30
-        }
+        },
+        resultHeight: 200
       }
     },
     methods: {
@@ -69,6 +70,17 @@ function createApp(vueElement) {
           return 'selected-' + (sign > 0 ? 'positive' : 'negative');
         }
       },
+      truncateResults(results, rowHeight) {
+        const margin = 40;
+        const maxResults = Math.max(3, Math.floor((this.style.resultHeight-margin) / rowHeight));
+
+        if (results.length <= maxResults) return results;
+        const nTop = Math.ceil((maxResults-1)/2);
+        const nBottom = Math.floor((maxResults-1)/2);
+        return results.slice(0, nTop)
+          .concat([{ellipsis: true}])
+          .concat(results.slice(-nBottom));
+      },
       setAnswerData(answers) {
         model = new Model(answers);
         this.cities = [...model.cities];
@@ -95,6 +107,12 @@ function createApp(vueElement) {
         });
       },
 
+      questionsById() {
+        const qById = [];
+        this.questions.forEach(q => { qById[q.id] = q.question; });
+        return qById;
+      },
+
       nonEmptyOpinions() {
         const opinions = {};
         for (const [key, value] of Object.entries(this.opinions)) {
@@ -112,16 +130,19 @@ function createApp(vueElement) {
           return this.parties.map(p => ({ name: p }));
 
         const maxR = this.style.plot.height * 0.7;
-        return model.sortedParties(this.parties, this.nonEmptyOpinions).map(party => {
-          party.score = party.results.score;
-          party.bins = party.bins.map(b => ({
-            cx: b.relX * this.style.plot.width,
-            cy: this.style.plot.height*0.5,
-            r: Math.sqrt(b.weight) * maxR,
-            score: b.score
-          }));
-          return party;
-        });
+        return this.truncateResults(
+          model.sortedParties(this.parties, this.nonEmptyOpinions).map(party => {
+            party.score = party.results.score;
+            party.bins = party.bins.map(b => ({
+              cx: (b.relX * 0.8 + 0.1) * this.style.plot.width,
+              cy: this.style.plot.height*0.5,
+              r: Math.sqrt(b.weight) * maxR,
+              score: b.score
+            }));
+            return party;
+          }),
+          this.style.plot.height + 10
+        );
       },
 
       sortedQuestions() {
@@ -134,7 +155,7 @@ function createApp(vueElement) {
         }))
         .sort((a,b) => b.score - a.score);
 
-        return questions
+        return this.questions
           .filter(q => this.nonEmptyOpinions[q.id])
           .concat(questions.filter(q => !this.nonEmptyOpinions[q.id]));
       },
@@ -145,20 +166,26 @@ function createApp(vueElement) {
           .filter(p => p.party === this.selected.party)
           .filter(p => !this.selected.city || p.city === this.selected.city);
 
-        if (!this.anyOpinions) return partyPeople;
+        const rowH = 28;
+        if (!this.anyOpinions) return this.truncateResults(partyPeople, rowH);
 
-        return partyPeople.map(person => ({
+        return this.truncateResults(partyPeople.map(person => ({
           score: model.scorePeople(this.nonEmptyOpinions, [person]).score,
-          answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions),
+          answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions)
+            .map(op => ({
+              question: this.questionsById[op.id],
+              ...op
+            })),
           ...person
         }))
-        .sort((a,b) => b.score - a.score);
+        .sort((a,b) => b.score - a.score), rowH);
       }
     }
   });
 
   return {
     start({questions, answers} = {}) {
+      app.style.resultHeight = document.getElementById('result-box').clientHeight;
       app.questions = Object.keys(questions).map(q => ({
         id: q,
         question: questions[q]

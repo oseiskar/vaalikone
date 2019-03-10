@@ -2,6 +2,7 @@ body {
     margin-left: 0;
     margin-right: 0;
     margin-top: 2%;
+    height: 100%;
 }
 
 .party-row {
@@ -24,6 +25,15 @@ body {
     flex-basis: 150px;
     flex-grow: 0;
     flex-shrink: 0;
+}
+
+.arrow-col {
+  white-space: nowrap;
+}
+
+.person-col {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .party-col-spacer {
@@ -76,11 +86,18 @@ body {
       top: 0;
       right: 0;
       width: 40%;
+      height: 100%;
   }
 
   .question-column {
       width: 60%;
   }
+}
+
+.ellipsis {
+  display: block;
+  margin-bottom: 1.0em;
+  margin-top: 1.0em;
 }
 
 @media (max-width: 40em) {

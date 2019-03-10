@@ -43,6 +43,7 @@ class Model {
     const personWeight = 1.0 / peopleWithAnswers.length;
     peopleWithAnswers.map(person => {
       const personScore = this._getPersonAnswerScores(person,opinions)
+        .map(op => op.matchScore)
         .reduce((a,b) => a+b) / nOps;
 
       bins[personScore] = (bins[personScore] || 0.0) + 1 * personWeight;
@@ -59,8 +60,12 @@ class Model {
   _getPersonAnswerScores(person, opinions) {
     return Object.keys(opinions).map(id => {
       let ans = person.answers[id];
-      if (ans === undefined) return 0;
-      return (ans - this.options.neutral)*opinions[id];
+      if (ans === undefined) ans = this.options.neutral;
+      return {
+        id,
+        matchScore: (ans - this.options.neutral)*opinions[id],
+        answerScore: ans - this.options.neutral
+      };
     });
   }
 
