@@ -180,9 +180,14 @@ function createApp(vueElement) {
         return this.questions
           .filter(q => this.nonEmptyOpinions[q.id])
           .map(q => {
+            const op = this.opinions[q.id];
+            const score = model.scorePeople({ [q.id]: 1 }, partyPeople).score;
+            const matchScore = model.scorePeople({ [q.id]: op }, partyPeople).score;
+            const roundedScore = (Math.round(score*100/this.options.maxScore));
             return {
-              score: model.scorePeople({ [q.id]: 1 }, partyPeople).score,
-              matchScore: model.scorePeople({ [q.id]: this.opinions[q.id] }, partyPeople).score,
+              matchScore,
+              shortTitle: (op*100) + ' vs ' + roundedScore,
+              matchTitle: this.selected.party + ': ' +  roundedScore,
               ...q
             };
           })
