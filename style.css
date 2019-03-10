@@ -7,8 +7,8 @@ body {
 
 .party-row {
     text-align: left;
-    font-weight: bold;
     display: flex;
+    color: gray;
 }
 
 h3 {
@@ -21,7 +21,10 @@ h3 {
     flex-shrink: 1;
     overflow: hidden;
     white-space: nowrap;
-    padding-left: 0.5em;
+}
+
+.strong {
+    font-weight: bold;
 }
 
 .bin-col {
@@ -32,12 +35,12 @@ h3 {
 }
 
 .arrow-col {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 .person-col {
-  white-space: nowrap;
-  overflow: hidden;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .party-col-spacer {
@@ -49,6 +52,10 @@ h3 {
 .party-text {
     vertical-align: top;
     display: inline-block;
+}
+
+.party-heading {
+    max-width: 500px;
 }
 
 .select-row {
@@ -81,6 +88,10 @@ h3 {
     flex-shrink: 2;
     flex-grow: 4;
     padding-right: 2em;
+}
+
+.question-text {
+    max-width: 700px;
 }
 
 @media (min-width: 40em) {

@@ -25,30 +25,34 @@
         <div v-for="question in sortedQuestions" class="row question-row">
           <div class="button-column">
             <a class="btn" @click="toggleOpinion(question.id, 1)"
-              :class="arrowClass(question.id, 1)">&#8679;</a>
+              :class="arrowClass(question.id, 1)"
+              v-html="getHTMLArrow(1)"></a>
             <a class="btn" @click="toggleOpinion(question.id, -1)"
-              :class="arrowClass(question.id, -1)">&#8681;</a>
+              :class="arrowClass(question.id, -1)"
+              v-html="getHTMLArrow(-1)"></a>
           </div>
           <div class="text-column" :title="question.matchTitle">
-            <span v-if="question.matchScore !== undefined">
-              <span :style="textColorMap(question.matchScore)">
-              ({{question.shortTitle}})
+            <div class="question-text">
+              <span v-if="question.matchScore !== undefined">
+                <span :style="textColorMap(question.matchScore)">
+                ({{question.shortTitle}})
+                </span>
+                {{question.question}}
               </span>
-              {{question.question}}
-            </span>
-            <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
+              <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
+            </div>
           </div>
         </div>
       </div>
       <div class="result-column" id="result-box">
         <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selected.party">
-          <div class="party-col-spacer"></div>
           <div class="party-col">
             <span v-if="party.ellipsis" :style="textColorMap(0)" class="ellipsis">
               &vellip;
             </span>
-            <a v-else class="party-text" @click="toggleSelectedParty(party.name)"
-              :class="{ strong: selected.party === party.name }">{{party.name}}</a>
+            <a v-else class="party-text"
+              @click="toggleSelectedParty(party.name)"
+              :class="{ strong: !!party.score }">{{party.name}}</a>
           </div>
           <div class="bin-col">
             <histogram-plot
@@ -60,7 +64,7 @@
           <div class="party-col-spacer"></div>
         </div>
         <div v-if="selected.party">
-          <div class="row">
+          <div class="row party-heading">
             <h3 class="col-9">{{selected.party}}</h3>
             <a class="col-3" style="text-align: right" @click="selected.party = null" class="btn">&#x274C;</a>
           </div>
