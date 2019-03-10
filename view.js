@@ -70,8 +70,7 @@ function createApp(vueElement) {
           return 'selected-' + (sign > 0 ? 'positive' : 'negative');
         }
       },
-      truncateResults(results, rowHeight) {
-        const margin = 40;
+      truncateResults(results, rowHeight, margin = 0) {
         const maxResults = Math.max(3, Math.floor((this.style.resultHeight-margin) / rowHeight));
 
         if (results.length <= maxResults) return results;
@@ -166,8 +165,8 @@ function createApp(vueElement) {
           .filter(p => p.party === this.selected.party)
           .filter(p => !this.selected.city || p.city === this.selected.city);
 
-        const rowH = 28;
-        if (!this.anyOpinions) return this.truncateResults(partyPeople, rowH);
+        const rowH = 28, margin = 40;
+        if (!this.anyOpinions) return this.truncateResults(partyPeople, rowH, margin);
 
         return this.truncateResults(partyPeople.map(person => ({
           score: model.scorePeople(this.nonEmptyOpinions, [person]).score,
@@ -178,7 +177,7 @@ function createApp(vueElement) {
             })),
           ...person
         }))
-        .sort((a,b) => b.score - a.score), rowH);
+        .sort((a,b) => b.score - a.score), rowH, margin);
       }
     }
   });

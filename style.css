@@ -11,6 +11,10 @@ body {
     display: flex;
 }
 
+h3 {
+    font-size: 16pt;
+}
+
 .party-col {
     flex-basis: 200px;
     flex-grow: 3;
@@ -97,7 +101,7 @@ body {
 .ellipsis {
   display: block;
   margin-bottom: 1.0em;
-  margin-top: 1.0em;
+  margin-top: 0.5em;
 }
 
 @media (max-width: 40em) {
