@@ -30,7 +30,12 @@
               :class="arrowClass(question.id, -1)">&#8681;</a>
           </div>
           <div class="text-column">
-            <span :style="textColorMap(question.score)">{{question.question}}</span>
+            <span v-if="question.matchScore !== undefined">
+              <strong :style="textColorMap(question.matchScore)"
+                v-html="getHTMLArrow(question.score)"></strong>
+              {{question.question}}
+            </span>
+            <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
           </div>
         </div>
       </div>
@@ -54,7 +59,7 @@
         <div v-if="selected.party">
           <div class="row">
             <h3 class="col-9">{{selected.party}}</h3>
-            <a class="col-3" style="text-align: right" @click="selected.party = null" class="btn">X</a>
+            <a class="col-3" style="text-align: right" @click="selected.party = null" class="btn">&#x274C;</a>
           </div>
           <div class="row" v-for="person in sortedCandidates">
             <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">
@@ -65,10 +70,10 @@
               <small v-if="!selected.city" style="color: gray"> ({{person.city}})</small>
             </div>
             <div class="col" v-if="anyOpinions">
-              <span v-for="ans in person.answers" :style="textColorMap(ans.matchScore)" class="arrow-col" :title="ans.question">
-                <span v-if="!ans.answerScore">&#9898;</span>
-                <span v-if="ans.answerScore > 0">&#8679;</span>
-                <span v-if="ans.answerScore < 0">&#8681;</span>
+              <span v-for="ans in person.answers" class="arrow-col"
+                :style="textColorMap(ans.matchScore)"
+                :title="ans.question"
+                v-html="getHTMLArrow(ans.answerScore)">
               </span>
             </div>
           </div>

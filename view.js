@@ -52,6 +52,11 @@ function createApp(vueElement) {
         if (x === undefined || x === null) return null;
         return this.colorMap(x, 0.9);
       },
+      getHTMLArrow(score) {
+        if (score > 0) return '&#8679;'; // arrow up
+        else if (score < 0) return '&#8681;'; // arrow down
+        return '&#9898;'; // hollow circle
+      },
       toggleSelectedParty(party) {
         if (this.selected.party === party) {
           this.selected.party = null;
@@ -156,6 +161,13 @@ function createApp(vueElement) {
 
         return this.questions
           .filter(q => this.nonEmptyOpinions[q.id])
+          .map(q => {
+            return {
+              score: model.scorePeople({ [q.id]: 1 }, partyPeople).score,
+              matchScore: model.scorePeople({ [q.id]: this.opinions[q.id] }, partyPeople).score,
+              ...q
+            };
+          })
           .concat(questions.filter(q => !this.nonEmptyOpinions[q.id]));
       },
 
