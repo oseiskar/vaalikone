@@ -50,9 +50,11 @@
               :class="{ strong: selected.party === party.name }">{{party.name}}</a>
           </div>
           <div class="bin-col">
-            <svg v-if="party.bins" :width="style.plot.width" :height="style.plot.height">
-              <circle v-for="c in party.bins" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="binColorMap(c.score)"/>
-            </svg>
+            <histogram-plot
+              v-if="party.bins"
+              :options="options"
+              :bins="party.bins"
+              :dimensions="style.plot"></histogram-plot>
           </div>
           <div class="party-col-spacer"></div>
         </div>

@@ -4,6 +4,56 @@
 function createApp(vueElement) {
   let model = new Model([]);
 
+  function toRgb(arr) {
+    return 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
+  }
+
+  function colorMap(x, minX, maxX, brightness) {
+    const colorScale = x => (x - minX) / (maxX - minX);
+
+    let c = colorScale(x);
+
+    let sat = Math.sqrt(Math.abs(c - 0.5)*2.0);
+    const bright = brightness || sat*0.3 + 0.7;
+
+    return toRgb([
+        1.0 - (c-2/3)*3,
+        c*2,
+        0.0
+      ]
+      .map(v => Math.min(Math.max(v, 0), 1))
+      .map(v => (v*sat + 1.0 - sat)*bright));
+  }
+
+  Vue.component('histogram-plot', {
+    template: `
+      <svg :width="dimensions.width" :height="dimensions.height">
+        <circle v-for="c in circles" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="binColorMap(c.score)"/>
+      </svg>`,
+    props: ['dimensions', 'options', 'bins'],
+    methods: {
+      binColorMap(x) {
+        return colorMap(x, this.options.minScore, this.options.maxScore, 0.9);
+      },
+      scoreToX(score) {
+        const { minScore, maxScore } = this.options;
+        const relX = (score - minScore) / (maxScore - minScore);
+        return (relX * 0.8 + 0.1) * this.dimensions.width;
+      }
+    },
+    computed: {
+      circles() {
+        const maxR = this.dimensions.height * 0.7;
+        return Object.keys(this.bins).map(score => ({
+          score,
+          cx: this.scoreToX(score),
+          cy: this.dimensions.height*0.5,
+          r: Math.sqrt(this.bins[score]) * maxR
+        }));
+      }
+    }
+  });
+
   const app = new Vue({
     el: vueElement,
     data: {
@@ -25,32 +75,9 @@ function createApp(vueElement) {
       }
     },
     methods: {
-      colorMap(x, brightness) {
-        const minX = this.options.minScore;
-        const maxX = this.options.maxScore;
-        const colorScale = x => (x - minX) / (maxX - minX);
-        const rgb = (arr) => 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
-
-        let c = colorScale(x);
-
-        let sat = Math.sqrt(Math.abs(c - 0.5)*2.0);
-        const bright = brightness || sat*0.3 + 0.7;
-
-        return rgb([
-            1.0 - (c-2/3)*3,
-            c*2,
-            0.0
-          ]
-          .map(v => Math.min(Math.max(v, 0), 1))
-          .map(v => (v*sat + 1.0 - sat)*bright));
-      },
       textColorMap(x) {
         if (x === undefined || x === null) return null;
-        return 'color: ' + this.colorMap(x, 0.7);
-      },
-      binColorMap(x) {
-        if (x === undefined || x === null) return null;
-        return this.colorMap(x, 0.9);
+        return 'color: ' + colorMap(x, this.options.minScore, this.options.maxScore, 0.7);
       },
       getHTMLArrow(score) {
         if (score > 0) return '&#8679;'; // arrow up
@@ -135,16 +162,7 @@ function createApp(vueElement) {
 
         const maxR = this.style.plot.height * 0.7;
         return this.truncateResults(
-          model.sortedParties(this.parties, this.nonEmptyOpinions).map(party => {
-            party.score = party.results.score;
-            party.bins = party.bins.map(b => ({
-              cx: (b.relX * 0.8 + 0.1) * this.style.plot.width,
-              cy: this.style.plot.height*0.5,
-              r: Math.sqrt(b.weight) * maxR,
-              score: b.score
-            }));
-            return party;
-          }),
+          model.sortedParties(this.parties, this.nonEmptyOpinions),
           this.style.plot.height + 10
         );
       },

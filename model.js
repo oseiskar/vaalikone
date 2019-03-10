@@ -72,29 +72,11 @@ class Model {
   sortedParties(parties, opinions) {
     parties = parties.map(party => ({
       name: party,
-      results: this.scorePeople(
+      ...this.scorePeople(
         opinions,
         this.candidates.filter(person => person.party === party))
     }));
 
-    let allBins = {};
-    parties.forEach(p =>
-      Object.keys(p.results.bins).forEach(b => {
-        allBins[b] = true;
-      })
-    );
-    allBins = Object.keys(allBins).map(b => parseFloat(b)).sort((a,b) => a-b);
-
-    parties.forEach(party => {
-      let i = 0;
-      party.bins = allBins.map(b => ({
-          relX: (++i - 0.5) / allBins.length,
-          score: b,
-          weight: party.results.bins[b],
-        }))
-      .filter(c => c.weight > 0);
-    });
-
-    return parties.sort((a,b) => b.results.score - a.results.score);
+    return parties.sort((a,b) => b.score - a.score);
   }
 }
