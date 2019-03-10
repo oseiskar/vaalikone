@@ -18,7 +18,7 @@ function createApp(vueElement) {
       opinions: {},
       style: {
         plot: {
-          width: 300,
+          width: 200,
           height: 30
         }
       }

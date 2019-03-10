@@ -1,40 +1,111 @@
 body {
+    margin-left: 0;
+    margin-right: 0;
     margin-top: 2%;
 }
 
 .party-row {
-  text-align: right;
-  font-weight: bold;
-  padding-right: 20%;
+    text-align: left;
+    font-weight: bold;
+    display: flex;
+}
+
+.party-col {
+    flex-basis: 200px;
+    flex-grow: 3;
+    flex-shrink: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 0.5em;
+}
+
+.bin-col {
+    text-align: left;
+    flex-basis: 150px;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.party-col-spacer {
+    flex-basis: 0px;
+    flex-grow: 2;
+    flex-shrink: 10;
 }
 
 .party-text {
-  vertical-align: top;
-  display: inline-block;
+    vertical-align: top;
+    display: inline-block;
 }
 
 .select-row {
-  text-align: center;
-  max-width: 50%;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 5%;
+    text-align: center;
+    max-width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 5%;
 }
 
 .question-row {
-  margin-bottom: 1em;
+    display: flex;
+    margin-bottom: 1em;
+    width: 100%;
 }
 
-.graph-column {
-    position: fixed;
-    top: 10;
-    left: 55%;
-    width: 50%;
+.button-column {
+    margin: 0;
+    padding: 0;
+    text-align: right;
+    padding-right: 3%;
+    padding-top: 0.25em;
+    flex-basis: 90px;
+    flex-grow: 1;
+    flex-shrink: 0;
 }
 
-.question-column {
-    margin: 3%;
-    width: 50%;
+.text-column {
+    flex-basis: 200px;
+    flex-shrink: 2;
+    flex-grow: 4;
+    padding-right: 2em;
+}
+
+@media (min-width: 40em) {
+  /* Larger screens */
+  .result-column {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 40%;
+  }
+
+  .question-column {
+      width: 60%;
+  }
+}
+
+@media (max-width: 40em) {
+  /* Phones, portrait */
+  .result-column {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 40%;
+      width: 100%;
+      margin: 0;
+      background: white;
+      border-top: 1px solid gray;
+  }
+
+  .question-column {
+      width: 100%;
+      padding-bottom: 80%;
+  }
+}
+
+.result-column {
+    padding-top: 3%;
+    padding-left: 1em;
+    padding-right: 1em;
 }
 
 .person-name {
