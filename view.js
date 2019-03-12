@@ -57,6 +57,7 @@ function createApp(vueElement) {
   const app = new Vue({
     el: vueElement,
     data: {
+      copyright: {},
       questions: [],
       allParties: [],
       options: [],
@@ -218,12 +219,14 @@ function createApp(vueElement) {
   });
 
   return {
-    start({questions, answers} = {}) {
+    start({questions, answers, meta} = {}) {
+      document.title = meta.title;
       app.style.resultHeight = document.getElementById('result-box').clientHeight;
       app.questions = Object.keys(questions).map(q => ({
         id: q,
         question: questions[q]
       }));
+      app.copyright = meta.copyright;
       app.setAnswerData(answers);
     }
   };

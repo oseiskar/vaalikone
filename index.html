@@ -86,6 +86,11 @@
           </div>
         </div>
       </div>
+      <div class="copyright">
+        &copy; data
+        <a :href="copyright.url">{{ copyright.text }}</a><span class="hidden-mobile">,
+        code by <a href="https://github.com/oseiskar/">oseiskar</a></span>
+      </div>
     </div>
 </body>
 <script src="model.js"></script>
@@ -94,10 +99,10 @@
   "use strict";
   const app = createApp('#vuemain');
   Promise.all(
-    ['data/questions.json', 'data/answers.json']
+    ['data/questions.json', 'data/answers.json', 'data/meta.json']
     .map(file => fetch(file).then(res => res.json()))
-  ).then(([questions, answers]) => {
-    app.start({questions, answers});
+  ).then(([questions, answers, meta]) => {
+    app.start({questions, answers, meta});
   });
 </script>
 </html>
