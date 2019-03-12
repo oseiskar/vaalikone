@@ -169,7 +169,16 @@ function createApp(vueElement) {
       },
 
       sortedQuestions() {
-        if (!this.selected.party) return this.questions;
+        if (!this.selected.party) {
+          if (this.selected.city) {
+            // filter out questions with no answers from the selected city
+            const cityPeople = this.candidates.filter(p => p.city === this.selected.city);
+            return this.questions
+              .filter(q => model.scorePeople({ [q.id]: 1 }, cityPeople).bins.length > 0);
+          } else {
+            return this.questions;
+          }
+        }
 
         const partyPeople = this.candidates.filter(p => p.party === this.selected.party);
         const questions = this.questions.map(question => ({
@@ -182,9 +191,10 @@ function createApp(vueElement) {
           .filter(q => this.nonEmptyOpinions[q.id])
           .map(q => {
             const op = this.opinions[q.id];
-            const score = model.scorePeople({ [q.id]: 1 }, partyPeople).score;
+            const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
+            if (!score.bins.length) return null;
             const matchScore = model.scorePeople({ [q.id]: op }, partyPeople).score;
-            const roundedScore = (Math.round(score*100/this.options.maxScore));
+            const roundedScore = (Math.round(score.score*100/this.options.maxScore));
             return {
               matchScore,
               shortTitle: (op*100) + ' vs ' + roundedScore,
@@ -192,6 +202,7 @@ function createApp(vueElement) {
               ...q
             };
           })
+          .filter(x => x !== null) // drop questions with now answers in this group
           .concat(questions.filter(q => !this.nonEmptyOpinions[q.id]));
       },
 
