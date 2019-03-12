@@ -1,4 +1,4 @@
-# Election compass (finnish _Vaalikone_)
+# Election compass (Finnish _Vaalikone_)
 
 An application for finding a candidate to vote for in an election, based on
 similarity of answers to a questionnaire. Instead of answering the entire
