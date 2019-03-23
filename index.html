@@ -20,27 +20,34 @@
       {{error}}
     </div>
     <div v-else>
-      <div class="question-column">
+      <div v-if="resultsClass" :class="resultsClass">
         <div class="select-row">
           <select v-model="selected.city" class="form-control">
-            <option :value="null">-</option>
+            <option :value="null">(kaikki alueet)</option>
             <option v-for="city in cities" :value="city">{{city}}</option>
           </select>
         </div>
+        <div :class="resultsInnerClass">
+          <result-view
+              :non-empty-opinions='nonEmptyOpinions'
+              :city='selected.city'
+              :back-text='backText'
+              @party-changed='partyChanged'
+              @close='resultsClosed'>
+            </result-view>
+        </div>
+      </div>
+      <div v-if="questionsClass" :class="questionsClass">
         <question-view
           :city='selected.city'
           :party='selected.party'
           @opinions-changed='opinionsChanged'>
         </question-view>
       </div>
-      <div class="result-column" id="result-box">
-        <result-view
-          :non-empty-opinions='nonEmptyOpinions'
-          :city='selected.city'
-          @party-changed='partyChanged'>
-        </result-view>
-      </div>
-      <div class="copyright" v-if="copyright">
+      <a class="visible-mobile next-button fab btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
+        {{showResultsText}}
+      </a>
+      <div class="copyright" v-if="copyright" :class="{ 'hidden-mobile': hideCopyrightOnMobile }">
         &copy; data
         <a :href="copyright.url">{{ copyright.text }}</a><span class="hidden-mobile">,
         code by <a href="https://github.com/oseiskar/vaalikone">oseiskar</a></span>
@@ -49,13 +56,13 @@
   </div>
 </body>
 <script type="text/x-template" id="question-template">
-<div>
+<div class="questions-content">
   <div v-for="question in sortedQuestions" class="row question-row">
     <div class="button-column">
-      <a class="btn" @click="toggleOpinion(question.id, 1)"
+      <a class="btn opinion-btn" @click="toggleOpinion(question.id, 1)"
         :class="arrowClass(question.id, 1)"
         v-html="getHTMLArrow(1)"></a>
-      <a class="btn" @click="toggleOpinion(question.id, -1)"
+      <a class="btn opinion-btn" @click="toggleOpinion(question.id, -1)"
         :class="arrowClass(question.id, -1)"
         v-html="getHTMLArrow(-1)"></a>
     </div>
@@ -74,7 +81,7 @@
 </div>
 </script>
 <script type="text/x-template" id="result-template">
-<div>
+<div class="result-content">
   <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selectedParty">
     <div class="party-col">
       <span v-if="party.ellipsis" :style="textColorMap(0)" class="ellipsis">
@@ -84,18 +91,17 @@
         @click="toggleSelectedParty(party.name)"
         :class="{ strong: !!party.score }">{{party.name}}</a>
     </div>
-    <div class="bin-col">
+    <div class="bin-col" v-if="anyOpinions">
       <histogram-plot
         v-if="party.bins"
         :bins="party.bins"
         :dimensions="style.plot"></histogram-plot>
     </div>
-    <div class="party-col-spacer"></div>
   </div>
   <div v-if="selectedParty">
     <div class="row party-heading">
       <h3 class="col-9">{{selectedParty}}</h3>
-      <a class="col-3" style="text-align: right" @click="selectedParty = null" class="btn">&#x274C;</a>
+      <a class="col-3" style="text-align: right" @click="selectedParty = null">&#x2715;</a>
     </div>
     <div class="row" v-for="person in sortedCandidates">
       <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">
@@ -105,15 +111,21 @@
         <span :style="textColorMap(person.score)">{{person.name}}</span>
         <small v-if="!city" style="color: gray"> ({{person.city}})</small>
       </div>
-      <div class="col" v-if="anyOpinions">
+      <div class="col" v-if="anyOpinions" style="text-align: right">
         <span v-for="ans in person.answers" class="arrow-col"
           :style="textColorMap(ans.matchScore)"
-          :title="ans.question"
+          :title="ans.question.question"
           v-html="getHTMLArrow(ans.answerScore)">
         </span>
       </div>
     </div>
+    <a class="back-button btn btn-lg fab" @click="selectedParty = null">
+      {{backText}}
+    </a>
   </div>
+  <a class="visible-mobile back-button btn btn-lg fab" v-if="!selectedParty" @click="closeResults">
+    {{backText}}
+  </a>
 </div>
 </script>
 <script src="model.js"></script>

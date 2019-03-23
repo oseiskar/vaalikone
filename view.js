@@ -154,7 +154,7 @@ function createApp(vueElement) {
 
   Vue.component('result-view', {
     template: '#result-template',
-    props: ['nonEmptyOpinions', 'city'],
+    props: ['nonEmptyOpinions', 'city', 'backText'],
     data() {
       return {
         selectedParty: null,
@@ -163,7 +163,7 @@ function createApp(vueElement) {
             width: 200,
             height: 30
           },
-          resultHeight: window.innerHeight / 2 // TODO document.getElementById('result-box').clientHeight;
+          resultHeight: window.innerHeight - 100 // TODO
         }
       };
     },
@@ -176,6 +176,9 @@ function createApp(vueElement) {
         } else {
           this.selectedParty = party;
         }
+      },
+      closeResults() {
+        this.$emit('close', true);
       },
       truncateResults(results, rowHeight, margin = 0) {
         const maxResults = Math.max(3, Math.floor((this.style.resultHeight-margin) / rowHeight));
@@ -248,10 +251,35 @@ function createApp(vueElement) {
         copyright: {},
         cities: [],
         nonEmptyOpinions: {},
+        showResultsText: "Näytä tulos",
+        backText: "Takaisin",
+        allCitiesText: "(kaikki alueet)",
+        phase: 'answer',
         error: null,
+        closeTapped: false,
         selected: {
           party: null,
           city: null
+        }
+      },
+      computed: {
+        questionsClass() {
+          return `question-column question-column-${this.phase}`;
+        },
+        resultsClass() {
+          return `result-column result-column-${this.phase}`;
+        },
+        resultsInnerClass() {
+          return `result-inner result-inner-${this.phase}`;
+        },
+        nSelected() {
+          return Object.keys(this.nonEmptyOpinions).length;
+        },
+        showNext() {
+          return this.phase === 'answer' && this.nSelected > 0;
+        },
+        hideCopyrightOnMobile() {
+          return this.showNext || this.phase !== 'answer';
         }
       },
       methods: {
@@ -261,6 +289,14 @@ function createApp(vueElement) {
 
         partyChanged(party) {
           this.selected.party = party;
+        },
+
+        resultsClosed() {
+          this.phase = 'answer';
+        },
+
+        nextClicked() {
+          this.phase = 'view';
         }
       }
     });

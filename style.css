@@ -3,6 +3,7 @@ body {
     margin-right: 0;
     margin-top: 2%;
     height: 100%;
+    padding-bottom: 4em;
 }
 
 a {
@@ -49,6 +50,7 @@ h3 {
 
 .arrow-col {
     white-space: nowrap;
+    text-align: right;
 }
 
 .person-col {
@@ -67,15 +69,11 @@ h3 {
     display: inline-block;
 }
 
-.party-heading {
-    max-width: 500px;
-}
-
 .select-row {
-    text-align: center;
-    max-width: 50%;
+    max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 1.5em;
     margin-bottom: 1.5em;
 }
 
@@ -123,10 +121,21 @@ h3 {
       right: 0;
       width: 40%;
       height: 100%;
+      background: #f8f8f8;
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
 
   .question-column {
       width: 60%;
+  }
+
+  .visible-mobile {
+    display: none;
+  }
+
+  .fab {
+    left: 65% !important;
+    bottom: 3em !important;
   }
 }
 
@@ -136,33 +145,50 @@ h3 {
   margin-top: 0.5em;
 }
 
+.result-content {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.copyright {
+  margin: 0;
+  padding-right: 1em;
+  padding-bottom: 3px;
+  padding-left: 0.5em;
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  background: #f8f8f8;
+}
+
 @media (max-width: 40em) {
   /* Phones, portrait */
   .result-column {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      height: 40%;
-      width: 100%;
-      margin: 0;
-      background: white;
-      border-top: 1px solid gray;
-  }
-
-  .question-column {
-      width: 100%;
-      padding-bottom: 80%;
   }
 
   .hidden-mobile {
-      display: none;
+    display: none;
+  }
+
+  .result-inner-answer {
+    display: none;
+  }
+
+  .question-column-view {
+    display: none;
+  }
+
+  .copyright {
+    text-align: center;
+    width: 100%;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
 }
 
 .result-column {
-    padding-top: 3%;
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-left: 2em;
+    padding-right: 2em;
 }
 
 .person-name {
@@ -174,11 +200,29 @@ a {
     color: #505050;
 }
 
-a.btn {
+.opinion-btn {
   border: 1px solid gray;
   border-radius: 5px;
   margin-right: 3px;
   padding: 4px;
+}
+
+.back-button {
+  background: #eeeeee;
+}
+
+.next-button {
+  color: white !important;
+}
+
+.fab {
+  position: fixed;
+  bottom: 1em;
+  left: 2em;
+  right: 2em;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 a.selected-positive {
