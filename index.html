@@ -114,10 +114,10 @@
       })
       .then(res => res.json())
     )
-  ).then(([questions, answers, meta]) => {
-    app.start({questions, answers, meta});
-  }).catch((err) => {
+  ).catch((err) => {
     app.error("Failed to load data");
+  }).then(([questions, answers, meta]) => {
+    app.start({questions, answers, meta});
   });
 </script>
 </html>
