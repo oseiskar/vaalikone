@@ -62,6 +62,7 @@ function createApp(vueElement) {
       allParties: [],
       options: [],
       cities: [],
+      error: null,
       selected: {
         party: null,
         city: null
@@ -239,6 +240,9 @@ function createApp(vueElement) {
       }));
       app.copyright = meta.copyright;
       app.setAnswerData(answers);
+    },
+    error(error) {
+      app.error = error;
     }
   };
 }

@@ -5,6 +5,13 @@ body {
     height: 100%;
 }
 
+.error {
+    width: 100%;
+    margin-top: 15%;
+    text-align: center;
+    font-size: 16pt;
+}
+
 .party-row {
     text-align: left;
     display: flex;

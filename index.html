@@ -14,7 +14,12 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="vuemain">
+  <div id="vuemain">
+    <div v-if="error" class="error">
+      <h1>Error</h1>
+      {{error}}
+    </div>
+    <div v-else>
       <div class="question-column">
         <div class="select-row">
           <select v-model="selected.city" class="form-control">
@@ -92,6 +97,7 @@
         code by <a href="https://github.com/oseiskar/vaalikone">oseiskar</a></span>
       </div>
     </div>
+  </div>
 </body>
 <script src="model.js"></script>
 <script src="view.js"></script>
@@ -101,9 +107,17 @@
   const app = createApp('#vuemain');
   Promise.all(
     ['questions.json', 'answers.json', 'meta.json']
-    .map(file => fetch(`${dataurl}/${file}`).then(res => res.json()))
+    .map(file => fetch(`${dataurl}/${file}`)
+      .then(res => {
+        if (res.ok) return res;
+        throw new Error(res.statusText);
+      })
+      .then(res => res.json())
+    )
   ).then(([questions, answers, meta]) => {
     app.start({questions, answers, meta});
+  }).catch((err) => {
+    app.error("Failed to load data");
   });
 </script>
 </html>
