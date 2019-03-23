@@ -23,7 +23,7 @@
       <div v-if="resultsClass" :class="resultsClass">
         <div class="select-row">
           <select v-model="selected.city" class="form-control">
-            <option :value="null">(kaikki alueet)</option>
+            <option :value="null">{{allCitiesText}}</option>
             <option v-for="city in cities" :value="city">{{city}}</option>
           </select>
         </div>
