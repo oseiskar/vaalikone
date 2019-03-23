@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="vuemain">
+  <div id="vuemain" v-cloak>
     <div v-if="error" class="error">
       <h1>Error</h1>
       {{error}}
@@ -28,11 +28,8 @@
           </select>
         </div>
         <question-view
-          :options='options'
           :city='selected.city'
           :party='selected.party'
-          :questions='questions'
-          :candidates='candidates'
           @opinions-changed='opinionsChanged'>
         </question-view>
       </div>
@@ -40,10 +37,6 @@
         <result-view
           :non-empty-opinions='nonEmptyOpinions'
           :city='selected.city'
-          :options='options'
-          :candidates='candidates'
-          :questions='questions'
-          :all-parties='allParties'
           @party-changed='partyChanged'>
         </result-view>
       </div>
@@ -94,7 +87,6 @@
     <div class="bin-col">
       <histogram-plot
         v-if="party.bins"
-        :options="options"
         :bins="party.bins"
         :dimensions="style.plot"></histogram-plot>
     </div>

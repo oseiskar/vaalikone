@@ -2,7 +2,7 @@
 /* globals Model, Vue, document */
 
 function createApp(vueElement) {
-  let model = new Model([]);
+  let model = new Model();
 
   function toRgb(arr) {
     return 'rgb('+arr.map(x => x*255).map(Math.round).join(',')+')';
@@ -42,13 +42,13 @@ function createApp(vueElement) {
       <svg :width="dimensions.width" :height="dimensions.height">
         <circle v-for="c in circles" :r="c.r" :cx="c.cx" :cy="c.cy" :fill="binColorMap(c.score)"/>
       </svg>`,
-    props: ['dimensions', 'options', 'bins'],
+    props: ['dimensions', 'bins'],
     methods: {
       binColorMap(x) {
-        return colorMap(x, this.options.minScore, this.options.maxScore, 0.9);
+        return colorMap(x, model.options.minScore, model.options.maxScore, 0.9);
       },
       scoreToX(score) {
-        const { minScore, maxScore } = this.options;
+        const { minScore, maxScore } = model.options;
         const relX = (score - minScore) / (maxScore - minScore);
         return (relX * 0.8 + 0.1) * this.dimensions.width;
       }
@@ -68,14 +68,19 @@ function createApp(vueElement) {
 
   Vue.component('question-view', {
     template: '#question-template',
-    props: ['options', 'questions', 'party', 'city', 'candidates'],
+    props: ['party', 'city'],
     data() {
+      const opinions = {};
+      model.questions.forEach(q => {
+        opinions[q.id] = null;
+      });
+
       return {
-        opinions: {}
+        opinions
       };
     },
     methods: {
-      textColorMap(x) { return _textColorMap(x, this.options); },
+      textColorMap(x) { return _textColorMap(x, model.options); },
       getHTMLArrow(score) { return _getHTMLArrow(score); },
       toggleOpinion(id, sign) {
         if (this.opinions[id] === sign)
@@ -90,12 +95,6 @@ function createApp(vueElement) {
       }
     },
     watch: {
-      questions() {
-        // make all opinions reactive
-        this.questions.forEach(question => {
-          Vue.set(this.opinions, question.id, null);
-        });
-      },
       nonEmptyOpinions() {
         this.$emit('opinions-changed', this.nonEmptyOpinions);
       }
@@ -117,29 +116,29 @@ function createApp(vueElement) {
         if (!this.party) {
           if (this.city) {
             // filter out questions with no answers from the selected city
-            const cityPeople = this.candidates.filter(p => p.city === this.city);
-            return this.questions
+            const cityPeople = model.candidates.filter(p => p.city === this.city);
+            return model.questions
               .filter(q => model.scorePeople({ [q.id]: 1 }, cityPeople).bins.length > 0);
           } else {
-            return this.questions;
+            return model.questions;
           }
         }
 
-        const partyPeople = this.candidates.filter(p => p.party === this.party);
-        const questions = this.questions.map(question => ({
+        const partyPeople = model.candidates.filter(p => p.party === this.party);
+        const questions = model.questions.map(question => ({
           score: model.scorePeople({ [question.id]: 1 }, partyPeople).score,
           ...question
         }))
         .sort((a,b) => b.score - a.score);
 
-        return this.questions
+        return model.questions
           .filter(q => this.nonEmptyOpinions[q.id])
           .map(q => {
             const op = this.opinions[q.id];
             const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
             if (!score.bins.length) return null;
             const matchScore = model.scorePeople({ [q.id]: op }, partyPeople).score;
-            const roundedScore = (Math.round(score.score*100/this.options.maxScore));
+            const roundedScore = (Math.round(score.score*100/model.options.maxScore));
             return {
               matchScore,
               shortTitle: (op*100) + ' vs ' + roundedScore,
@@ -155,7 +154,7 @@ function createApp(vueElement) {
 
   Vue.component('result-view', {
     template: '#result-template',
-    props: ['nonEmptyOpinions', 'city', 'options', 'candidates', 'allParties', 'questions'],
+    props: ['nonEmptyOpinions', 'city'],
     data() {
       return {
         selectedParty: null,
@@ -169,10 +168,10 @@ function createApp(vueElement) {
       };
     },
     methods: {
-      textColorMap(x) { return _textColorMap(x, this.options); },
+      textColorMap(x) { return _textColorMap(x, model.options); },
       getHTMLArrow(score) { return _getHTMLArrow(score); },
       toggleSelectedParty(party) {
-        if (this.party === party) {
+        if (this.selectedParty === party) {
           this.selectedParty = null;
         } else {
           this.selectedParty = party;
@@ -189,21 +188,20 @@ function createApp(vueElement) {
           .concat(results.slice(-nBottom));
       }
     },
+    watch: {
+      selectedParty() {
+        this.$emit('party-changed', this.selectedParty);
+      }
+    },
     computed: {
-      questionsById() {
-        const qById = [];
-        this.questions.forEach(q => { qById[q.id] = q.question; });
-        return qById;
-      },
-
       anyOpinions() {
         return Object.keys(this.nonEmptyOpinions).length > 0;
       },
 
       parties() {
-        return this.allParties.filter(party => {
+        return model.parties.filter(party => {
           return !this.city ||
-            this.candidates.filter(p =>
+            model.candidates.filter(p =>
               p.city === this.city &&
               p.party === party).length > 0;
         });
@@ -222,7 +220,7 @@ function createApp(vueElement) {
 
       sortedCandidates() {
         if (!this.selectedParty) return [];
-        let partyPeople = this.candidates
+        let partyPeople = model.candidates
           .filter(p => p.party === this.selectedParty)
           .filter(p => !this.city || p.city === this.city);
 
@@ -233,7 +231,7 @@ function createApp(vueElement) {
           score: model.scorePeople(this.nonEmptyOpinions, [person]).score,
           answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions)
             .map(op => ({
-              question: this.questionsById[op.id],
+              question: model.questionsById[op.id],
               ...op
             })),
           ...person
@@ -243,54 +241,41 @@ function createApp(vueElement) {
     }
   });
 
-  const app = new Vue({
-    el: vueElement,
-    data: {
-      copyright: {},
-      questions: [],
-      options: {},
-      cities: [],
-      candidates: [],
-      allParties: [],
-      nonEmptyOpinions: {},
-      error: null,
-      selected: {
-        party: null,
-        city: null
+  function newApp() {
+    return new Vue({
+      el: vueElement,
+      data: {
+        copyright: {},
+        cities: [],
+        nonEmptyOpinions: {},
+        error: null,
+        selected: {
+          party: null,
+          city: null
+        }
       },
-      opinions: {}
-    },
-    methods: {
-      setAnswerData(answers) {
-        model = new Model(answers);
-        this.cities = [...model.cities];
-        this.options = {...model.options};
-        this.candidates = [...model.candidates];
-        this.allParties = [...model.parties];
-      },
+      methods: {
+        opinionsChanged(opinions) {
+          this.nonEmptyOpinions = opinions;
+        },
 
-      opinionsChanged(opinions) {
-        this.nonEmptyOpinions = opinions;
-      },
-
-      partyChanged(party) {
-        this.selected.party = party;
+        partyChanged(party) {
+          this.selected.party = party;
+        }
       }
-    }
-  });
+    });
+  }
 
   return {
     start({questions, answers, meta} = {}) {
       document.title = meta.title;
-      app.questions = Object.keys(questions).map(q => ({
-        id: q,
-        question: questions[q]
-      }));
+      model = new Model(questions, answers);
+      const app = newApp();
+      app.cities = model.cities;
       app.copyright = meta.copyright;
-      app.setAnswerData(answers);
     },
     error(error) {
-      app.error = error;
+      newApp().error = error;
     }
   };
 }
