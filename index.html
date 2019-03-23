@@ -27,69 +27,25 @@
             <option v-for="city in cities" :value="city">{{city}}</option>
           </select>
         </div>
-        <div v-for="question in sortedQuestions" class="row question-row">
-          <div class="button-column">
-            <a class="btn" @click="toggleOpinion(question.id, 1)"
-              :class="arrowClass(question.id, 1)"
-              v-html="getHTMLArrow(1)"></a>
-            <a class="btn" @click="toggleOpinion(question.id, -1)"
-              :class="arrowClass(question.id, -1)"
-              v-html="getHTMLArrow(-1)"></a>
-          </div>
-          <div class="text-column" :title="question.matchTitle">
-            <div class="question-text">
-              <span v-if="question.matchScore !== undefined">
-                <span :style="textColorMap(question.matchScore)">
-                ({{question.shortTitle}})
-                </span>
-                {{question.question}}
-              </span>
-              <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
-            </div>
-          </div>
-        </div>
+        <question-view
+          :options='options'
+          :city='selected.city'
+          :party='selected.party'
+          :questions='questions'
+          :candidates='candidates'
+          @opinions-changed='opinionsChanged'>
+        </question-view>
       </div>
       <div class="result-column" id="result-box">
-        <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selected.party">
-          <div class="party-col">
-            <span v-if="party.ellipsis" :style="textColorMap(0)" class="ellipsis">
-              &vellip;
-            </span>
-            <a v-else class="party-text"
-              @click="toggleSelectedParty(party.name)"
-              :class="{ strong: !!party.score }">{{party.name}}</a>
-          </div>
-          <div class="bin-col">
-            <histogram-plot
-              v-if="party.bins"
-              :options="options"
-              :bins="party.bins"
-              :dimensions="style.plot"></histogram-plot>
-          </div>
-          <div class="party-col-spacer"></div>
-        </div>
-        <div v-if="selected.party">
-          <div class="row party-heading">
-            <h3 class="col-9">{{selected.party}}</h3>
-            <a class="col-3" style="text-align: right" @click="selected.party = null" class="btn">&#x274C;</a>
-          </div>
-          <div class="row" v-for="person in sortedCandidates">
-            <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">
-              &vellip;
-            </div>
-            <div v-else class="col person-col">
-              <span :style="textColorMap(person.score)">{{person.name}}</span>
-              <small v-if="!selected.city" style="color: gray"> ({{person.city}})</small>
-            </div>
-            <div class="col" v-if="anyOpinions">
-              <span v-for="ans in person.answers" class="arrow-col"
-                :style="textColorMap(ans.matchScore)"
-                :title="ans.question"
-                v-html="getHTMLArrow(ans.answerScore)">
-              </span>
-            </div>
-          </div>
-        </div>
+        <result-view
+          :non-empty-opinions='nonEmptyOpinions'
+          :city='selected.city'
+          :options='options'
+          :candidates='candidates'
+          :questions='questions'
+          :all-parties='allParties'
+          @party-changed='partyChanged'>
+        </result-view>
       </div>
       <div class="copyright" v-if="copyright">
         &copy; data
@@ -99,6 +55,75 @@
     </div>
   </div>
 </body>
+<script type="text/x-template" id="question-template">
+<div>
+  <div v-for="question in sortedQuestions" class="row question-row">
+    <div class="button-column">
+      <a class="btn" @click="toggleOpinion(question.id, 1)"
+        :class="arrowClass(question.id, 1)"
+        v-html="getHTMLArrow(1)"></a>
+      <a class="btn" @click="toggleOpinion(question.id, -1)"
+        :class="arrowClass(question.id, -1)"
+        v-html="getHTMLArrow(-1)"></a>
+    </div>
+    <div class="text-column" :title="question.matchTitle">
+      <div class="question-text">
+        <span v-if="question.matchScore !== undefined">
+          <span :style="textColorMap(question.matchScore)">
+          ({{question.shortTitle}})
+          </span>
+          {{question.question}}
+        </span>
+        <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
+      </div>
+    </div>
+  </div>
+</div>
+</script>
+<script type="text/x-template" id="result-template">
+<div>
+  <div v-for="party in sortedParties" :style="textColorMap(party.score)" class="party-row" v-if="!selectedParty">
+    <div class="party-col">
+      <span v-if="party.ellipsis" :style="textColorMap(0)" class="ellipsis">
+        &vellip;
+      </span>
+      <a v-else class="party-text"
+        @click="toggleSelectedParty(party.name)"
+        :class="{ strong: !!party.score }">{{party.name}}</a>
+    </div>
+    <div class="bin-col">
+      <histogram-plot
+        v-if="party.bins"
+        :options="options"
+        :bins="party.bins"
+        :dimensions="style.plot"></histogram-plot>
+    </div>
+    <div class="party-col-spacer"></div>
+  </div>
+  <div v-if="selectedParty">
+    <div class="row party-heading">
+      <h3 class="col-9">{{selectedParty}}</h3>
+      <a class="col-3" style="text-align: right" @click="selectedParty = null" class="btn">&#x274C;</a>
+    </div>
+    <div class="row" v-for="person in sortedCandidates">
+      <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">
+        &vellip;
+      </div>
+      <div v-else class="col person-col">
+        <span :style="textColorMap(person.score)">{{person.name}}</span>
+        <small v-if="!city" style="color: gray"> ({{person.city}})</small>
+      </div>
+      <div class="col" v-if="anyOpinions">
+        <span v-for="ans in person.answers" class="arrow-col"
+          :style="textColorMap(ans.matchScore)"
+          :title="ans.question"
+          v-html="getHTMLArrow(ans.answerScore)">
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+</script>
 <script src="model.js"></script>
 <script src="view.js"></script>
 <script type="text/javascript">
