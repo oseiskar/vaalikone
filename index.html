@@ -97,10 +97,11 @@
 <script src="view.js"></script>
 <script type="text/javascript">
   "use strict";
+  const dataurl = new URLSearchParams(window.location.search).get('data') || 'data';
   const app = createApp('#vuemain');
   Promise.all(
-    ['data/questions.json', 'data/answers.json', 'data/meta.json']
-    .map(file => fetch(file).then(res => res.json()))
+    ['questions.json', 'answers.json', 'meta.json']
+    .map(file => fetch(`${dataurl}/${file}`).then(res => res.json()))
   ).then(([questions, answers, meta]) => {
     app.start({questions, answers, meta});
   });
