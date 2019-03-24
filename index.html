@@ -15,6 +15,9 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="fa-10x error" style="font-size: 24pt" id="spinner">
+    <i class="fas fa-spinner fa-spin"></i>
+  </div>
   <div id="vuemain" v-cloak>
     <div v-if="error" class="error">
       <h1>Error</h1>
@@ -148,6 +151,7 @@
     app.error("Failed to load data");
   }).then(([questions, answers, meta]) => {
     app.start({questions, answers, meta});
+    document.getElementById('spinner').outerHTML = ''; // remove spinner
   });
 </script>
 </html>
