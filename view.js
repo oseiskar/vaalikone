@@ -68,11 +68,11 @@ function createApp(vueElement) {
 
   Vue.component('question-view', {
     template: '#question-template',
-    props: ['party', 'city'],
+    props: ['party', 'city', 'initialOpinions'],
     data() {
       const opinions = {};
       model.questions.forEach(q => {
-        opinions[q.id] = null;
+        opinions[q.id] = this.initialOpinions[q.id] || null;
       });
 
       return {
@@ -141,6 +141,7 @@ function createApp(vueElement) {
             return {
               matchScore,
               matchTitle: percentScore + '%',
+              longMatchTitle: this.party,
               opinion: op,
               ...q
             };
@@ -254,9 +255,14 @@ function createApp(vueElement) {
         copyright: {},
         cities: [],
         nonEmptyOpinions: {},
-        showResultsText: "Näytä tulos",
-        backText: "Takaisin",
-        allCitiesText: "(kaikki alueet)",
+        tutorial: true,
+        loc: {
+          info: "Ota kantaa noin viiteen tärkeimpään kysymykseen",
+          showResults: "Näytä tulos",
+          back: "Takaisin",
+          selectParty: "Valitse puolue",
+          allCities: "(kaikki alueet)"
+        },
         phase: 'answer',
         error: null,
         closeTapped: false,
@@ -267,10 +273,14 @@ function createApp(vueElement) {
       },
       computed: {
         questionsClass() {
-          return `question-column question-column-${this.phase}`;
+          if (this.showSelectPartyText) return null;
+          return `question-column question-column-${this.phase}` +
+            (this.tutorial ? ' tutorial' : '');
         },
         resultsClass() {
-          return `result-column result-column-${this.phase}`;
+          return (!this.tutorial || this.phase === 'view') ?
+            `result-column result-column-${this.phase}` :
+            null;
         },
         resultsInnerClass() {
           return `result-inner result-inner-${this.phase}`;
@@ -284,9 +294,17 @@ function createApp(vueElement) {
         hideCopyrightOnMobile() {
           return this.showNext || this.phase !== 'answer';
         },
-        showSelectCityMobile() {
+        showSelectCity() {
           // TODO: or if city specific questions
-          return this.phase !== 'answer';
+          return this.selected.party || !this.tutorial;
+        },
+        showSelectPartyText() {
+          return this.phase === 'view' && !this.selected.party && this.tutorial;
+        }
+      },
+      watch: {
+        'selected.party': function() {
+          if (this.selected.party) this.tutorial = false;
         }
       },
       methods: {

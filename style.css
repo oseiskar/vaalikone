@@ -1,7 +1,6 @@
 body {
     margin-left: 0;
     margin-right: 0;
-    margin-top: 2%;
     height: 100%;
     padding-bottom: 4em;
 }
@@ -11,6 +10,16 @@ a {
 }
 
 [v-cloak] {display: none}
+
+.info-text {
+  font-size: 16pt;
+  width: 100%;
+  text-align: center;
+  padding-left: 2em;
+  padding-right: 2em;
+  padding-bottom: 2em;
+  font-weight: bold;
+}
 
 .error {
     width: 100%;
@@ -50,7 +59,9 @@ h3 {
 
 .arrow-col {
     white-space: nowrap;
-    text-align: right;
+    text-align: center;
+    width: 1em;
+    display: inline-block;
 }
 
 .person-col {
@@ -73,7 +84,6 @@ h3 {
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 1.5em;
     margin-bottom: 1.5em;
 }
 
@@ -95,21 +105,22 @@ h3 {
 }
 
 .button-column {
-    flex-basis: 100px;
+    flex-basis: 120px;
     flex-grow: 1;
-    flex-shrink: 1;
+    flex-shrink: 0;
     max-width: 200px;
+    margin-right: 1em;
 }
 
 .text-column {
-    flex-basis: 200px;
-    flex-shrink: 2;
-    flex-grow: 4;
+    flex-basis: 250px;
+    flex-shrink: 1;
+    flex-grow: 3;
     max-width: 700px;
 }
 
 .question-text {
-  padding-left: 1em;
+  padding-left: 10%;
   padding-right: 1em;
 }
 
@@ -120,6 +131,13 @@ h3 {
 
 .person-match-score {
   margin-right: 1em;
+}
+
+.select-party-text {
+    padding-top: 2em;
+    font-size: 16pt;
+    text-align: center;
+    font-weight: bold;
 }
 
 @media (min-width: 60em) {
@@ -134,6 +152,16 @@ h3 {
       box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   }
 
+  .select-party-text {
+    width: 60%;
+    height: 100%;
+    padding-top: 15%;
+    position: absolute;
+    background: white;
+    top: 0;
+    left: 0;
+  }
+
   .question-column {
       width: 60%;
   }
@@ -145,6 +173,10 @@ h3 {
   .floating-action-button {
     left: 65% !important;
     bottom: 3em !important;
+  }
+
+  .next-button {
+    max-width: 300px;
   }
 }
 
@@ -188,11 +220,15 @@ h3 {
   .result-column {
   }
 
+  .button-column {
+    text-align: center;
+  }
+
   .hidden-mobile {
     display: none;
   }
 
-  .result-inner-answer {
+  .result-column-answer {
     display: none;
   }
 
@@ -208,8 +244,16 @@ h3 {
 }
 
 .result-column {
-    padding-left: 2em;
-    padding-right: 2em;
+    padding: 2em;
+}
+
+.question-column.tutorial {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.question-column {
+    padding-top: 3em;
 }
 
 .person-name {

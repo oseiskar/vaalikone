@@ -24,10 +24,11 @@
       {{error}}
     </div>
     <div v-else>
-      <div v-if="resultsClass" :class="resultsClass">
-        <div class="select-row" :class="{ 'hidden-mobile': !showSelectCityMobile }">
+      <div class="select-party-text" v-if="showSelectPartyText">{{loc.selectParty}}</div>
+      <div v-if="resultsClass" v-if="resultsClass" :class="resultsClass">
+        <div class="select-row" v-if="showSelectCity">
           <select v-model="selected.city" class="form-control">
-            <option :value="null">{{allCitiesText}}</option>
+            <option :value="null">{{loc.allCities}}</option>
             <option v-for="city in cities" :value="city">{{city}}</option>
           </select>
         </div>
@@ -35,21 +36,23 @@
           <result-view
               :non-empty-opinions='nonEmptyOpinions'
               :city='selected.city'
-              :back-text='backText'
+              :back-text='loc.back'
               @party-changed='partyChanged'
               @close='resultsClosed'>
             </result-view>
         </div>
       </div>
       <div v-if="questionsClass" :class="questionsClass">
+        <div class="info-text" v-if="tutorial">{{loc.info}}</div>
         <question-view
           :city='selected.city'
           :party='selected.party'
+          :initial-opinions='nonEmptyOpinions'
           @opinions-changed='opinionsChanged'>
         </question-view>
       </div>
-      <a class="visible-mobile next-button floating-action-button btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
-        {{showResultsText}}
+      <a class="next-button floating-action-button btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
+        {{loc.showResults}}
       </a>
       <div class="copyright" v-if="copyright" :class="{ 'hidden-mobile': hideCopyrightOnMobile }">
         &copy; data
@@ -77,7 +80,9 @@
       <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, -1)"
         :class="arrowClass(question.id, -1)"
         v-html="getHTMLArrow(-1)"></a>
-      <div v-if="question.matchTitle" class="match-score" :style="textColorMap(question.matchScore)">
+      <div v-if="question.matchTitle" class="match-score"
+        :style="textColorMap(question.matchScore)"
+        :title="question.longMatchTitle">
         {{question.matchTitle}}
         <span v-html="getHTMLArrow(question.opinion)"></span>
       </div>
