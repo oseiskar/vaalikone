@@ -32,9 +32,9 @@ function createApp(vueElement) {
   }
 
   function _getHTMLArrow(score) {
-    if (score > 0) return '&#8679;'; // arrow up
-    else if (score < 0) return '&#8681;'; // arrow down
-    return '&#9898;'; // hollow circle
+    if (score > 0) return '<i class="far fa-thumbs-up"></i>';
+    else if (score < 0) return '<i class="far fa-thumbs-down"></i>';
+    return '&mdash;';
   }
 
   Vue.component('histogram-plot', {
@@ -138,11 +138,10 @@ function createApp(vueElement) {
             const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
             if (!score.bins.length) return null;
             const matchScore = model.scorePeople({ [q.id]: op }, partyPeople).score;
-            const roundedScore = (Math.round(score.score*100/model.options.maxScore));
+            const percentScore = (matchScore/model.options.maxScore*0.5+0.5)*100;
             return {
               matchScore,
-              shortTitle: (op*100) + ' vs ' + roundedScore,
-              matchTitle: this.party + ': ' +  roundedScore,
+              matchTitle: Math.round(percentScore) + '%',
               ...q
             };
           })

@@ -9,6 +9,9 @@
       crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.8/dist/vue.min.js" crossorigin="anonymous">
     </script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css"
+      integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf"
+      crossorigin="anonymous">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -42,7 +45,7 @@
           @opinions-changed='opinionsChanged'>
         </question-view>
       </div>
-      <a class="visible-mobile next-button fab btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
+      <a class="visible-mobile next-button floating-action-button btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
         {{showResultsText}}
       </a>
       <div class="copyright" v-if="copyright" :class="{ 'hidden-mobile': hideCopyrightOnMobile }">
@@ -55,25 +58,25 @@
 </body>
 <script type="text/x-template" id="question-template">
 <div class="questions-content">
-  <div v-for="question in sortedQuestions" class="row question-row">
-    <div class="button-column">
-      <a class="btn opinion-btn" @click="toggleOpinion(question.id, 1)"
-        :class="arrowClass(question.id, 1)"
-        v-html="getHTMLArrow(1)"></a>
-      <a class="btn opinion-btn" @click="toggleOpinion(question.id, -1)"
-        :class="arrowClass(question.id, -1)"
-        v-html="getHTMLArrow(-1)"></a>
-    </div>
-    <div class="text-column" :title="question.matchTitle">
+  <div v-for="question in sortedQuestions" class="question-row">
+    <div class="text-column">
       <div class="question-text">
-        <span v-if="question.matchScore !== undefined">
-          <span :style="textColorMap(question.matchScore)">
-          ({{question.shortTitle}})
-          </span>
+        <span v-if="question.matchTitle">
           {{question.question}}
         </span>
         <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
       </div>
+    </div>
+    <div class="button-column">
+      <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, 1)"
+        :class="arrowClass(question.id, 1)"
+        v-html="getHTMLArrow(1)"></a>
+      <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, -1)"
+        :class="arrowClass(question.id, -1)"
+        v-html="getHTMLArrow(-1)"></a>
+      <span v-if="question.matchTitle" class="match-score" :style="textColorMap(question.matchScore)">
+        {{question.matchTitle}}
+      </span>
     </div>
   </div>
 </div>
@@ -117,11 +120,11 @@
         </span>
       </div>
     </div>
-    <a class="back-button btn btn-lg fab" @click="selectedParty = null">
+    <a class="back-button btn btn-lg floating-action-button" @click="selectedParty = null">
       {{backText}}
     </a>
   </div>
-  <a class="visible-mobile back-button btn btn-lg fab" v-if="!selectedParty" @click="closeResults">
+  <a class="visible-mobile back-button btn btn-lg floating-action-button" v-if="!selectedParty" @click="closeResults">
     {{backText}}
   </a>
 </div>
