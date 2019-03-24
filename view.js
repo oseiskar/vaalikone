@@ -82,6 +82,10 @@ function createApp(vueElement) {
     methods: {
       textColorMap(x) { return _textColorMap(x, model.options); },
       getHTMLArrow(score) { return _getHTMLArrow(score); },
+      scoreDescription(percentScore) {
+        return Math.max(percentScore, 100 - percentScore) + '% ' +
+          this.getHTMLArrow(percentScore > 50 ? 1 : -1);
+      },
       toggleOpinion(id, sign) {
         if (this.opinions[id] === sign)
           this.opinions[id] = null;
@@ -126,7 +130,7 @@ function createApp(vueElement) {
 
         const partyPeople = model.candidates.filter(p => p.party === this.party);
         const questions = model.questions.map(question => ({
-          score: model.scorePeople({ [question.id]: 1 }, partyPeople).score,
+          ...model.scorePeople({ [question.id]: 1 }, partyPeople),
           ...question
         }))
         .sort((a,b) => b.score - a.score);
@@ -137,11 +141,11 @@ function createApp(vueElement) {
             const op = this.opinions[q.id];
             const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
             if (!score.bins.length) return null;
-            const { score: matchScore, percentScore } = model.scorePeople({ [q.id]: op }, partyPeople);
+            const { score: matchScore } = model.scorePeople({ [q.id]: op }, partyPeople);
             return {
               matchScore,
-              matchTitle: percentScore + '%',
-              longMatchTitle: this.party,
+              percentScore: score.percentScore,
+              matchTitle: true,
               opinion: op,
               ...q
             };

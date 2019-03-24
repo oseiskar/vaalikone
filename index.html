@@ -82,9 +82,11 @@
         v-html="getHTMLArrow(-1)"></a>
       <div v-if="question.matchTitle" class="match-score"
         :style="textColorMap(question.matchScore)"
-        :title="question.longMatchTitle">
-        {{question.matchTitle}}
-        <span v-html="getHTMLArrow(question.opinion)"></span>
+        :title="party" v-html="scoreDescription(question.percentScore)">
+      </div>
+      <div v-if="!question.matchTitle &amp;&amp; party"
+        :title="party" class="match-score" style="color: #cccccc"
+        v-html="scoreDescription(question.percentScore)">
       </div>
     </div>
   </div>
