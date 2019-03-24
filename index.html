@@ -77,9 +77,10 @@
       <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, -1)"
         :class="arrowClass(question.id, -1)"
         v-html="getHTMLArrow(-1)"></a>
-      <span v-if="question.matchTitle" class="match-score" :style="textColorMap(question.matchScore)">
+      <div v-if="question.matchTitle" class="match-score" :style="textColorMap(question.matchScore)">
         {{question.matchTitle}}
-      </span>
+        <span v-html="getHTMLArrow(question.opinion)"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -92,8 +93,9 @@
         &vellip;
       </span>
       <a v-else class="party-text"
-        @click="toggleSelectedParty(party.name)"
-        :class="{ strong: !!party.score }">{{party.name}}</a>
+        @click="toggleSelectedParty(party.name)">
+        <span class="party-match-score" v-if="anyOpinions">{{party.percentScore}}%</span>
+        <span :class="{ strong: party.hasScore }">{{party.name}}</span></a>
     </div>
     <div class="bin-col" v-if="anyOpinions">
       <histogram-plot
@@ -116,6 +118,7 @@
         <small v-if="!city" style="color: gray"> ({{person.city}})</small>
       </div>
       <div class="col" v-if="anyOpinions" style="text-align: right">
+        <span v-if="!person.ellipsis" :style="textColorMap(person.score)" class="person-match-score">{{person.percentScore}}%</span>
         <span v-for="ans in person.answers" class="arrow-col"
           :style="textColorMap(ans.matchScore)"
           :title="ans.question.question"

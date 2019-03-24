@@ -95,10 +95,10 @@ h3 {
 }
 
 .button-column {
-    flex-basis: 90px;
+    flex-basis: 100px;
     flex-grow: 1;
-    flex-shrink: 0;
-    max-width: 180px;
+    flex-shrink: 1;
+    max-width: 200px;
 }
 
 .text-column {
@@ -115,6 +115,11 @@ h3 {
 
 .match-score {
   margin-left: 1em;
+  display: inline-block;
+}
+
+.person-match-score {
+  margin-right: 1em;
 }
 
 @media (min-width: 60em) {
@@ -140,6 +145,18 @@ h3 {
   .floating-action-button {
     left: 65% !important;
     bottom: 3em !important;
+  }
+}
+
+.party-match-score {
+  display: none;
+}
+
+@media (min-width: 80em) {
+  /* Desktops / laptops */
+  .party-match-score {
+    display: inline-block;
+    width: 3em;
   }
 }
 

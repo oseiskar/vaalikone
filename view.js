@@ -137,11 +137,11 @@ function createApp(vueElement) {
             const op = this.opinions[q.id];
             const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
             if (!score.bins.length) return null;
-            const matchScore = model.scorePeople({ [q.id]: op }, partyPeople).score;
-            const percentScore = (matchScore/model.options.maxScore*0.5+0.5)*100;
+            const { score: matchScore, percentScore } = model.scorePeople({ [q.id]: op }, partyPeople);
             return {
               matchScore,
-              matchTitle: Math.round(percentScore) + '%',
+              matchTitle: percentScore + '%',
+              opinion: op,
               ...q
             };
           })
@@ -229,15 +229,19 @@ function createApp(vueElement) {
         const rowH = 28, margin = 40;
         if (!this.anyOpinions) return this.truncateResults(partyPeople, rowH, margin);
 
-        return this.truncateResults(partyPeople.map(person => ({
-          score: model.scorePeople(this.nonEmptyOpinions, [person]).score,
-          answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions)
-            .map(op => ({
-              question: model.questionsById[op.id],
-              ...op
-            })),
-          ...person
-        }))
+        return this.truncateResults(partyPeople.map(person => {
+          const { score, percentScore } = model.scorePeople(this.nonEmptyOpinions, [person]);
+          return {
+            score,
+            percentScore,
+            answers: model.getPersonAnswerScores(person, this.nonEmptyOpinions)
+              .map(op => ({
+                question: model.questionsById[op.id],
+                ...op
+              })),
+            ...person
+          };
+        })
         .sort((a,b) => b.score - a.score), rowH, margin);
       }
     }

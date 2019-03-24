@@ -63,7 +63,8 @@ class Model {
       score += personScore * personWeight;
     });
 
-    return { score, bins };
+    const percentScore = Math.round((score/this.options.maxScore*0.5+0.5)*100);
+    return { score, bins, percentScore, hasScore: true };
   }
 
   getPersonAnswerScores(person, opinions) {
