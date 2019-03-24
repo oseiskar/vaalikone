@@ -1,7 +1,7 @@
 'use strict';
 
 class Model {
-  constructor(questions = {}, answers = []) {
+  constructor(questions = [], answers = []) {
     this.answers = answers;
     let personId = 0;
     this.answers.forEach(a => {
@@ -11,10 +11,7 @@ class Model {
     this.candidates = answers.map(x => x.person);
     this.parties = [...new Set(this.candidates.map(x => x.party))].sort();
     this.cities = [...new Set(this.candidates.map(x => x.city))].sort();
-    this.questions = Object.keys(questions).map(q => ({
-      id: q,
-      question: questions[q]
-    }));
+    this.questions = questions;
     this.questionsById = {};
     this.questions.forEach(q => {
       this.questionsById[q.id] = q;

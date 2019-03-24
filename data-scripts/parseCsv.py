@@ -6,7 +6,7 @@ answerFile = sys.argv[2]
 
 output = []
 questions = {}
-questionsReversed = collections.OrderedDict()
+questionsReversed = []
 
 for row in csv.DictReader(sys.stdin, delimiter=';'):
 
@@ -26,7 +26,10 @@ for row in csv.DictReader(sys.stdin, delimiter=';'):
         else:
             questionId = len(questions) + 1
             questions[k] = questionId
-            questionsReversed[str(questionId)] = k
+            questionsReversed.append({
+                'id': int(questionId),
+                'question': k,
+            })
 
         if len(v) > 0:
             if ',' in v:
