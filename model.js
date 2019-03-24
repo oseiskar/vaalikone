@@ -44,7 +44,7 @@ class Model {
 
   scorePeople(opinions, people) {
     let score = 0.0;
-    const bins = [];
+    const bins = {};
     const selected = new Set(people.map(p => p.id));
     const nOps = Object.keys(opinions).length;
     const peopleWithAnswers = this.answers.filter(a => selected.has(a.person.id));
@@ -64,7 +64,7 @@ class Model {
     });
 
     const percentScore = Math.round((score/this.options.maxScore*0.5+0.5)*100);
-    return { score, bins, percentScore, hasScore: true };
+    return { score, bins, percentScore, hasScore: Object.keys(bins).length > 0 };
   }
 
   getPersonAnswerScores(person, opinions) {

@@ -34,8 +34,9 @@ a {
     color: gray;
 }
 
-h3 {
-    font-size: 16pt;
+.party-heading {
+    font-size: 18pt;
+    margin-top: 1em;
 }
 
 .party-col {
@@ -134,7 +135,7 @@ h3 {
 }
 
 .select-party-text {
-    padding-top: 2em;
+    padding-top: 1em;
     font-size: 16pt;
     text-align: center;
     font-weight: bold;
@@ -279,7 +280,7 @@ a {
 
 .floating-action-button {
   position: fixed;
-  bottom: 1em;
+  bottom: 1.5em;
   left: 2em;
   right: 2em;
   margin-left: auto;

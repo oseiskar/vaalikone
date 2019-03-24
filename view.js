@@ -122,7 +122,7 @@ function createApp(vueElement) {
             // filter out questions with no answers from the selected city
             const cityPeople = model.candidates.filter(p => p.city === this.city);
             return model.questions
-              .filter(q => model.scorePeople({ [q.id]: 1 }, cityPeople).bins.length > 0);
+              .filter(q => model.scorePeople({ [q.id]: 1 }, cityPeople).hasScore);
           } else {
             return model.questions;
           }
@@ -140,7 +140,7 @@ function createApp(vueElement) {
           .map(q => {
             const op = this.opinions[q.id];
             const score = model.scorePeople({ [q.id]: 1 }, partyPeople);
-            if (!score.bins.length) return null;
+            if (!score.hasScore) return null;
             const { score: matchScore } = model.scorePeople({ [q.id]: op }, partyPeople);
             return {
               matchScore,
@@ -167,7 +167,7 @@ function createApp(vueElement) {
             width: 200,
             height: 30
           },
-          resultHeight: window.innerHeight - 100 // TODO
+          resultHeight: window.innerHeight - 130 // TODO
         }
       };
     },
