@@ -141,6 +141,14 @@ a {
   font-weight: bold;
 }
 
+.group-title {
+  font-size: 14pt;
+}
+
+.question-group {
+  margin-bottom: 3em;
+}
+
 @media (min-width: 60em) {
   /* Larger screens */
   .result-column {

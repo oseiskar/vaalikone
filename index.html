@@ -64,29 +64,34 @@
 </body>
 <script type="text/x-template" id="question-template">
 <div class="questions-content">
-  <div v-for="question in sortedQuestions" class="question-row">
-    <div class="text-column">
-      <div class="question-text">
-        <span v-if="question.matchTitle">
-          {{question.question}}
-        </span>
-        <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
-      </div>
+  <div v-for="group in groupedQuestions" class="question-group">
+    <div v-if="group.title">
+      <h4 class="group-title question-row">{{group.title}}</h4>
     </div>
-    <div class="button-column">
-      <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, 1)"
-        :class="arrowClass(question.id, 1)"
-        v-html="getHTMLArrow(1)"></a>
-      <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, -1)"
-        :class="arrowClass(question.id, -1)"
-        v-html="getHTMLArrow(-1)"></a>
-      <div v-if="question.matchTitle" class="match-score"
-        :style="textColorMap(question.matchScore)"
-        :title="party" v-html="scoreDescription(question.percentScore)">
+    <div v-for="question in group.questions" class="question-row">
+      <div class="text-column">
+        <div class="question-text">
+          <span v-if="question.matchTitle">
+            {{question.question}}
+          </span>
+          <span v-else :style="textColorMap(question.score)">{{question.question}}</span>
+        </div>
       </div>
-      <div v-if="!question.matchTitle &amp;&amp; party"
-        :title="party" class="match-score" style="color: #cccccc"
-        v-html="scoreDescription(question.percentScore)">
+      <div class="button-column">
+        <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, 1)"
+          :class="arrowClass(question.id, 1)"
+          v-html="getHTMLArrow(1)"></a>
+        <a class="btn btn-lg opinion-btn" @click="toggleOpinion(question.id, -1)"
+          :class="arrowClass(question.id, -1)"
+          v-html="getHTMLArrow(-1)"></a>
+        <div v-if="question.matchTitle" class="match-score"
+          :style="textColorMap(question.matchScore)"
+          :title="party" v-html="scoreDescription(question.percentScore)">
+        </div>
+        <div v-if="!question.matchTitle &amp;&amp; party"
+          :title="party" class="match-score" style="color: #cccccc"
+          v-html="scoreDescription(question.percentScore)">
+        </div>
       </div>
     </div>
   </div>

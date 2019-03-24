@@ -116,6 +116,23 @@ function createApp(vueElement) {
         return Object.keys(this.nonEmptyOpinions).length > 0;
       },
 
+      groupedQuestions() {
+        if (this.party) {
+          return [{ questions: this.sortedQuestions }];
+        } else {
+          const groups = [];
+          const questionsByGroup = {};
+          this.sortedQuestions.forEach(q => {
+            if (!questionsByGroup[q.category]) {
+              groups.push(q.category);
+              questionsByGroup[q.category] = [];
+            }
+            questionsByGroup[q.category].push(q);
+          });
+          return groups.map(g => ({ title: g, questions: questionsByGroup[g] }));
+        }
+      },
+
       sortedQuestions() {
         if (!this.party) {
           if (this.city) {
