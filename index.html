@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <html>
 <head>
     <title>Alt-vaalikone</title>
@@ -21,7 +22,7 @@
     </div>
     <div v-else>
       <div v-if="resultsClass" :class="resultsClass">
-        <div class="select-row">
+        <div class="select-row" :class="{ 'hidden-mobile': !showSelectCityMobile }">
           <select v-model="selected.city" class="form-control">
             <option :value="null">{{allCitiesText}}</option>
             <option v-for="city in cities" :value="city">{{city}}</option>

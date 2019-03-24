@@ -280,6 +280,10 @@ function createApp(vueElement) {
         },
         hideCopyrightOnMobile() {
           return this.showNext || this.phase !== 'answer';
+        },
+        showSelectCityMobile() {
+          // TODO: or if city specific questions
+          return this.phase !== 'answer';
         }
       },
       methods: {
