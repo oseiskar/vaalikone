@@ -198,9 +198,6 @@ function createApp(vueElement) {
           this.selectedParty = party;
         }
       },
-      closeResults() {
-        this.$emit('close', true);
-      },
       truncateResults(results, rowHeight, margin = 0) {
         const maxResults = Math.max(3, Math.floor((this.style.resultHeight-margin) / rowHeight));
 
@@ -269,6 +266,8 @@ function createApp(vueElement) {
     }
   });
 
+  const SELECT_N = 5;
+
   function newApp() {
     return new Vue({
       el: vueElement,
@@ -280,11 +279,10 @@ function createApp(vueElement) {
         loc: {
           info: "Ota kantaa noin viiteen tärkeimpään kysymykseen",
           showResults: "Näytä tulos",
+          adjustAnswers: "Täydennä vastauksia",
           back: "Takaisin",
-          selectParty: "Valitse puolue",
           allCities: "(kaikki alueet)"
         },
-        phase: 'answer',
         error: null,
         closeTapped: false,
         selected: {
@@ -294,38 +292,31 @@ function createApp(vueElement) {
       },
       computed: {
         questionsClass() {
-          if (this.showSelectPartyText) return null;
-          return `question-column question-column-${this.phase}` +
-            (this.tutorial ? ' tutorial' : '');
-        },
-        resultsClass() {
-          return (!this.tutorial || this.phase === 'view') ?
-            `result-column result-column-${this.phase}` :
-            null;
-        },
-        resultsInnerClass() {
-          return `result-inner result-inner-${this.phase}`;
+          return 'question-column' + (this.tutorial ? '  question-column-tutorial' : '');
         },
         nSelected() {
           return Object.keys(this.nonEmptyOpinions).length;
         },
-        showNext() {
-          return this.phase === 'answer' && this.nSelected > 0;
-        },
         hideCopyrightOnMobile() {
-          return this.showNext || this.phase !== 'answer';
+          return !this.tutorial;
+        },
+        showResults() {
+          return !this.tutorial || this.nSelected >= SELECT_N - 1;
         },
         showSelectCity() {
           // TODO: or if city specific questions
           return this.selected.party || !this.tutorial;
-        },
-        showSelectPartyText() {
-          return this.phase === 'view' && !this.selected.party && this.tutorial;
         }
       },
       watch: {
         'selected.party': function() {
           if (this.selected.party) this.tutorial = false;
+        },
+        nSelected() {
+          if (this.nSelected >= SELECT_N && this.tutorial) {
+            this.tutorial = false;
+            $('#results-collapse').collapse('toggle');
+          }
         }
       },
       methods: {
@@ -335,14 +326,6 @@ function createApp(vueElement) {
 
         partyChanged(party) {
           this.selected.party = party;
-        },
-
-        resultsClosed() {
-          this.phase = 'answer';
-        },
-
-        nextClicked() {
-          this.phase = 'view';
         }
       }
     });

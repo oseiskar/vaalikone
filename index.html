@@ -13,6 +13,12 @@
       integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf"
       crossorigin="anonymous">
     <link rel="stylesheet" href="style.css" />
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 </head>
 <body>
   <div class="fa-10x error" style="font-size: 24pt" id="spinner">
@@ -24,26 +30,37 @@
       {{error}}
     </div>
     <div v-else>
-      <div class="select-party-text" v-if="showSelectPartyText">{{loc.selectParty}}</div>
-      <div v-if="resultsClass" v-if="resultsClass" :class="resultsClass">
-        <div class="select-row" v-if="showSelectCity">
-          <select v-model="selected.city" class="form-control">
-            <option :value="null">{{loc.allCities}}</option>
-            <option v-for="city in cities" :value="city">{{city}}</option>
-          </select>
+      <a class="visible-mobile show-results-button toggle-expand-button"
+        :class="{ 'hidden-mobile': tutorial }"
+        v-if="!selected.party"
+        data-toggle="collapse" data-target="#results-collapse">
+        {{loc.showResults}}
+      </a>
+      <div id="results-collapse" class="collapse results-collapse">
+        <div v-if="showResults" class="result-column">
+          <div class="select-row" v-if="showSelectCity">
+            <select v-model="selected.city" class="form-control">
+              <option :value="null">{{loc.allCities}}</option>
+              <option v-for="city in cities" :value="city">{{city}}</option>
+            </select>
+          </div>
+          <div class="result-inner">
+            <result-view
+                :non-empty-opinions='nonEmptyOpinions'
+                :city='selected.city'
+                :back-text='loc.back'
+                @party-changed='partyChanged'>
+              </result-view>
+          </div>
         </div>
-        <div :class="resultsInnerClass">
-          <result-view
-              :non-empty-opinions='nonEmptyOpinions'
-              :city='selected.city'
-              :back-text='loc.back'
-              @party-changed='partyChanged'
-              @close='resultsClosed'>
-            </result-view>
-        </div>
+        <a class="visible-mobile close-button toggle-expand-button"
+          v-if="!selected.party"
+          data-toggle="collapse" data-target="#results-collapse">
+          {{loc.adjustAnswers}}
+        </a>
       </div>
       <div v-if="questionsClass" :class="questionsClass">
-        <div class="info-text" v-if="tutorial">{{loc.info}}</div>
+        <div class="info-text">{{loc.info}}</div>
         <question-view
           :city='selected.city'
           :party='selected.party'
@@ -51,9 +68,6 @@
           @opinions-changed='opinionsChanged'>
         </question-view>
       </div>
-      <a class="next-button floating-action-button btn btn-lg btn-primary" v-if="showNext" @click="nextClicked">
-        {{loc.showResults}}
-      </a>
       <div class="copyright" v-if="copyright" :class="{ 'hidden-mobile': hideCopyrightOnMobile }">
         &copy; data
         <a :href="copyright.url">{{ copyright.text }}</a><span class="hidden-mobile">,
@@ -142,9 +156,6 @@
       {{backText}}
     </a>
   </div>
-  <a class="visible-mobile back-button btn btn-lg floating-action-button" v-if="!selectedParty" @click="closeResults">
-    {{backText}}
-  </a>
 </div>
 </script>
 <script src="model.js"></script>
