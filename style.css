@@ -216,6 +216,39 @@ a {
   height: 100%;
 }
 
+.banner-caret {
+  display: inline-block;
+  text-align: center;
+  width: 10%
+}
+
+.banner-text {
+  display: inline-block;
+  width: 75%;
+}
+
+.tip-dialog {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  border-radius: 0;
+  text-align: center;
+  font-size: 14pt;
+  padding: 1.5em;
+}
+
+.fade-hidden {
+  opacity: 0;
+  transition: visibility 0s 1s, opacity 0.5s linear;
+  visibility: hidden;
+}
+
+.fade-visible {
+  transition: opacity 1s linear;
+  opacity: 1;
+  visibility: visible;
+}
+
 @media (max-width: 60em) {
   /* Phones, portrait */
   .result-column {
@@ -235,10 +268,11 @@ a {
   }
 
   .toggle-expand-button {
-    background: #dddddd;
+    background: #eeeeee;
+    font-size: 14pt;
     width: 100%;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-    padding: 0.5em;
+    padding: 0.8em;
     display: block;
     text-align: center;
   }

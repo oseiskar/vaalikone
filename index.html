@@ -34,7 +34,13 @@
         :class="{ 'hidden-mobile': tutorial }"
         v-if="!selected.party"
         data-toggle="collapse" data-target="#results-collapse">
-        {{loc.showResults}}
+        <div class="banner-caret">
+          <i class="fas fa-angle-down"></i>
+        </div><div class="banner-text">
+          {{loc.showResults}}
+        </div><div class="banner-caret">
+          <i class="fas fa-angle-down"></i>
+        </div>
       </a>
       <div id="results-collapse" class="collapse results-collapse">
         <div v-if="showResults" class="result-column">
@@ -56,11 +62,17 @@
         <a class="visible-mobile close-button toggle-expand-button"
           v-if="!selected.party"
           data-toggle="collapse" data-target="#results-collapse">
-          {{loc.adjustAnswers}}
+          <div class="banner-caret">
+            <i class="fas fa-angle-up"></i>
+          </div><div class="banner-text">
+            {{loc.adjustAnswers}}
+          </div><div class="banner-caret">
+            <i class="fas fa-angle-up"></i>
+          </div>
         </a>
       </div>
-      <div v-if="questionsClass" :class="questionsClass">
-        <div class="info-text">{{loc.info}}</div>
+      <div :class="questionsClass">
+        <div class="info-text" v-if="showInfo">{{loc.info}}</div>
         <question-view
           :city='selected.city'
           :party='selected.party'
@@ -72,6 +84,13 @@
         &copy; data
         <a :href="copyright.url">{{ copyright.text }}</a><span class="hidden-mobile">,
         code by <a href="https://github.com/oseiskar/vaalikone">oseiskar</a></span>
+      </div>
+      <div class="tip-dialog alert alert-info" :class="{ 'fade-hidden': !showTip, 'fade-visible': showTip }">
+        <i class="fas fa-info-circle"></i>
+        {{loc.tip}}
+        <button type="button" class="close" @click="showTip = false">
+          <span>&times;</span>
+        </button>
       </div>
     </div>
   </div>
@@ -131,9 +150,11 @@
     </div>
   </div>
   <div v-if="selectedParty">
-    <div class="row party-heading">
-      <h3 class="col-9">{{selectedParty}}</h3>
-      <a class="col-3" style="text-align: right" @click="selectedParty = null">&#x2715;</a>
+    <div class="party-heading">
+      {{selectedParty}}
+      <button type="button" class="close" @click="selectedParty = null">
+        <span>&times;</span>
+      </button>
     </div>
     <div class="row" v-for="person in sortedCandidates">
       <div v-if="person.ellipsis" :style="textColorMap(0)" class="ellipsis col">

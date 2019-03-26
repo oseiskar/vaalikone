@@ -276,11 +276,14 @@ function createApp(vueElement) {
         cities: [],
         nonEmptyOpinions: {},
         tutorial: true,
+        showTip: false,
+        showInfo: true,
         loc: {
           info: "Ota kantaa noin viiteen tärkeimpään kysymykseen",
           showResults: "Näytä tulos",
           adjustAnswers: "Täydennä vastauksia",
           back: "Takaisin",
+          tip: "Valitse puolue tai täydennä vastauksia",
           allCities: "(kaikki alueet)"
         },
         error: null,
@@ -315,17 +318,28 @@ function createApp(vueElement) {
         nSelected() {
           if (this.nSelected >= SELECT_N && this.tutorial) {
             this.tutorial = false;
+            this.showTip = true;
             $('#results-collapse').collapse('toggle');
+            setTimeout(() => {
+              this.showTip = false;
+            }, 3 * 1000);
           }
         }
       },
       methods: {
         opinionsChanged(opinions) {
+          this.showTip = false;
           this.nonEmptyOpinions = opinions;
         },
 
         partyChanged(party) {
+          // scroll to top
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+
+          this.showTip = false;
           this.selected.party = party;
+          this.showInfo = false;
         }
       }
     });
